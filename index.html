@@ -286,16 +286,21 @@ function renderHome(search=''){
   moviesContainer.appendChild(sRow);
 }
 
-<script>
-
 // SHOW / EPISODES
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
 function openShow(show){
-  showPage('episodes'); document.getElementById('showTitle').innerText=show.title||'Show';
-  const episodesContainer=document.getElementById('episodesContainer'); episodesContainer.innerHTML='';
+  showPage('episodes'); 
+  document.getElementById('showTitle').innerText=show.title||'Show';
+  const episodesContainer=document.getElementById('episodesContainer'); 
+  episodesContainer.innerHTML='';
   if(show.seasons?.length>1){
     const seasonSelect=document.createElement('select');
-    show.seasons.forEach((s,i)=>{ const option=document.createElement('option'); option.value=i; option.text='Season '+(s.season||i+1); seasonSelect.appendChild(option); });
+    show.seasons.forEach((s,i)=>{ 
+      const option=document.createElement('option'); 
+      option.value=i; 
+      option.text='Season '+(s.season||i+1); 
+      seasonSelect.appendChild(option); 
+    });
     episodesContainer.appendChild(seasonSelect);
     seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
   }
@@ -304,10 +309,13 @@ function openShow(show){
 function renderEpisodes(show,seasonIndex){
   const episodesContainer=document.getElementById('episodesContainer');
   const dropdown=episodesContainer.querySelector('select');
-  episodesContainer.innerHTML=''; if(dropdown) episodesContainer.appendChild(dropdown);
+  episodesContainer.innerHTML=''; 
+  if(dropdown) episodesContainer.appendChild(dropdown);
   const season=(show.seasons?.[seasonIndex])||{episodes:[]};
   (season.episodes||[]).forEach(ep=>{
-    const epCard=document.createElement('div'); epCard.className='episode-card'; epCard.innerText=ep.title||'Untitled';
+    const epCard=document.createElement('div'); 
+    epCard.className='episode-card'; 
+    epCard.innerText=ep.title||'Untitled';
     epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
     episodesContainer.appendChild(epCard);
   });
@@ -317,52 +325,19 @@ function renderEpisodes(show,seasonIndex){
 const videoPlayer=document.getElementById('videoPlayer');
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
 document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
-  const tracks=videoPlayer.textTracks||[]; for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
+  const tracks=videoPlayer.textTracks||[]; 
+  for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
 });
 async function openPlayer(title,src,subs){
-  showPage('player'); videoPlayer.innerHTML=''; videoPlayer.src=src||'';
+  showPage('player'); 
+  videoPlayer.innerHTML=''; 
+  videoPlayer.src=src||'';
   const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
   if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
   videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
-  if(subs){ const track=document.createElement('track'); track.src=subs; track.kind='subtitles'; track.srclang='en'; track.label='English'; videoPlayer.appendChild(track); }
-  videoPlayer.play().catch(()=>{});
-}
-
-// ADMIN
-document.getElementById('addMediaBtn').addEventListener('click', ()=>{
-  const title=document.getElementById('adminTitle').value.trim();
-  const img=document.getElementById('adminImg').value.trim();
-  const src=document.getElementById('adminSrc').value.trim();
-  const subs=document.getElementById('adminSubs').value.trim();
-  const type=document.getElementById('adminType').value;
-  if(!title||!img||!src){ alert('Fill all required fields'); return; }
-  if(!mediaData[type]) mediaData[type]=[];
-  mediaData[type].push({title,img,src,subtitles:subs}); renderAdminList();
-});
-function renderAdminList(){
-  const adminList=document.getElementById('adminList'); adminList.innerHTML='';
-  ['movies','shows'].forEach(type=>{
-    const items=(mediaData[type]||[]);
-    items.forEach((m,i)=>{
-      const div=document.createElement('div'); div.className='episode-card';
-      div.innerHTML=`<strong>${m.title||'Untitled'}</strong> [${type}]
-      <button onclick="editMedia('${type}',${i})">Edit</button>
-      <button onclick="deleteMedia('${type}',${i})">Delete</button>`;
-      adminList.appendChild(div);
-    });
-  });
-}
-function editMedia(type,index){
-  const m=(mediaData[type]||[])[index]; if(!m) return;
-  const newTitle=prompt('Title:',m.title); if(newTitle) mediaData[type][index].title=newTitle;
-  const newImg=prompt('Image URL:',m.img); if(newImg) mediaData[type][index].img=newImg;
-  const newSrc=prompt('Video URL:',m.src); if(newSrc) mediaData[type][index].src=newSrc;
-  const newSubs=prompt('Subtitles URL:',m.subtitles||''); mediaData[type][index].subtitles=newSubs;
-  renderAdminList();
-}
-function deleteMedia(type,index){ if(!mediaData[type]) return; mediaData[type].splice(index,1); renderAdminList(); }
-</script>
-</body>
-</html>
-
-
+  if(subs){ 
+    const track=document.createElement('track'); 
+    track.src=subs; 
+    track.kind='subtitles'; 
+    track.srclang='en'; 
+    track.label
