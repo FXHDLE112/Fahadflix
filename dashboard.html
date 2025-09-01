@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FahadFlix - Dashboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    * {box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body {background:#141414;color:#fff;min-height:100vh}
+    header {display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#000}
+    header h1 {color:#e50914;font-size:1.8rem}
+    header button {background:#e50914;color:#fff;border:none;padding:.5rem 1rem;border-radius:5px;cursor:pointer}
+    main {padding:1rem}
+    h2 {margin-bottom:1rem}
+    #movies {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
+    .movie-card {background:#222;padding:1rem;border-radius:10px;transition:transform .2s}
+    .movie-card:hover {transform:scale(1.05)}
+    .movie-card h3 {font-size:1.1rem;margin-bottom:.5rem}
+    video {width:100%;border-radius:10px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>FahadFlix</h1>
+    <button onclick="signOut()">Sign Out</button>
+  </header>
+
+  <main>
+    <h2>Welcome, <span id="profileName"></span>!</h2>
+    <div id="movies">Loading...</div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signOut as firebaseSignOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+      authDomain: "fahadflix-storage.firebaseapp.com",
+      databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fahadflix-storage",
+      storageBucket: "fahadflix-storage.appspot.com",
+      messagingSenderId: "1064833913945",
+      appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Load profile name
+    document.getElementById("profileName").innerText = localStorage.getItem("selectedProfile") || "Guest";
+
+    // Fetch movies from GitHub
+    async function fetchMovies() {
+      const container = document.getElementById("movies");
+      try {
+        const response = await fetch("https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/movie.json");
+        const movies = await response.json();
+        container.innerHTML = "";
+        movies.forEach(movie => {
+          const card = document.createElement("div");
+          card.className = "movie-card";
+          card.innerHTML = `
+            <h3>${movie.title}</h3>
+            <video controls>
+              <source src="${movie.url}" type="video/mp4">
+              Your browser does not support video.
+            </video>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerText = "Failed to load movies.";
+      }
+    }
+
+    fetchMovies();
+
+    // Sign out
+    window.signOut = function() {
+      firebaseSignOut(auth).then(() => {
+        localStorage.removeItem("selectedProfile");
+        window.location.href = "index.html";
+      });
+    }
+  </script>
+</body>
+</html>
