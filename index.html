@@ -340,4 +340,46 @@ async function openPlayer(title,src,subs){
     track.src=subs; 
     track.kind='subtitles'; 
     track.srclang='en'; 
-    track.label
+    track.label='English'; 
+    videoPlayer.appendChild(track); 
+  }
+  videoPlayer.play().catch(()=>{});
+}
+
+// ADMIN
+document.getElementById('addMediaBtn').addEventListener('click', ()=>{
+  const title=document.getElementById('adminTitle').value.trim();
+  const img=document.getElementById('adminImg').value.trim();
+  const src=document.getElementById('adminSrc').value.trim();
+  const subs=document.getElementById('adminSubs').value.trim();
+  const type=document.getElementById('adminType').value;
+  if(!title||!img||!src){ alert('Fill all required fields'); return; }
+  if(!mediaData[type]) mediaData[type]=[];
+  mediaData[type].push({title,img,src,subtitles:subs}); renderAdminList();
+});
+function renderAdminList(){
+  const adminList=document.getElementById('adminList'); adminList.innerHTML='';
+  ['movies','shows'].forEach(type=>{
+    const items=(mediaData[type]||[]);
+    items.forEach((m,i)=>{
+      const div=document.createElement('div'); div.className='episode-card';
+      div.innerHTML=`<strong>${m.title||'Untitled'}</strong> [${type}]
+      <button onclick="editMedia('${type}',${i})">Edit</button>
+      <button onclick="deleteMedia('${type}',${i})">Delete</button>`;
+      adminList.appendChild(div);
+    });
+  });
+}
+function editMedia(type,index){
+  const m=(mediaData[type]||[])[index]; if(!m) return;
+  const newTitle=prompt('Title:',m.title); if(newTitle) mediaData[type][index].title=newTitle;
+  const newImg=prompt('Image URL:',m.img); if(newImg) mediaData[type][index].img=newImg;
+  const newSrc=prompt('Video URL:',m.src); if(newSrc) mediaData[type][index].src=newSrc;
+  const newSubs=prompt('Subtitles URL:',m.subtitles||''); mediaData[type][index].subtitles=newSubs;
+  renderAdminList();
+}
+function deleteMedia(type,index){ if(!mediaData[type]) return; mediaData[type].splice(index,1); renderAdminList(); }
+
+</script>
+</body>
+</html>
