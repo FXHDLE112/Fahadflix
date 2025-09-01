@@ -54,7 +54,7 @@
     async function fetchMovies() {
       const container = document.getElementById("movies");
       try {
-        const response = await fetch("https://raw.githubusercontent.com/FXHDLE112/Fahadflix/refs/heads/main/movies.json?token=GHSAT0AAAAAADICBYHQVMGTRHVFI3MS7AUC2FVRUKA");
+        const response = await fetch("https://raw.githubusercontent.com/FXHDLE112/tes-html/refs/heads/main/movies.json");
         const movies = await response.json();
         container.innerHTML = "";
         movies.forEach(movie => {
