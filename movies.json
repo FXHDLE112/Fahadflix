@@ -1,0 +1,27 @@
+{
+  "movies": [],
+  "shows": [
+    {
+      "title": "dragon ball dorm",
+      "img": "https://github.com/FXHDLE112/test/releases/download/astorybasedgame1222/website.fix.again.1.1.png",
+      "src": "https://ik.imagekit.io/dookpgmfq9/The%20Legendary%20Beach.mp4?updatedAt=1756452207635",
+      "subtitles": null
+    },
+    {
+      "title": "dragon ball dorm Shenanigans",
+      "img": "https://github.com/FXHDLE112/test/releases/download/astorybasedgame1222/website.fix.again.1.1.png",
+      "seasons": [
+        {
+          "season": 1,
+          "episodes": [
+            {
+              "title": "episode 1",
+              "src": "https://ik.imagekit.io/dookpgmfq9/The%20Legendary%20Beach.mp4?updatedAt=1756452207635",
+              "subtitles": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
