@@ -244,6 +244,15 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
 document.getElementById('adminToggleBtn').addEventListener('click', ()=> showPage('admin'));
 
+// ADMIN PANEL PROTECTION
+document.getElementById('adminToggleBtn').addEventListener('click', ()=>{
+  if(currentUser?.email==='fxhdle2@gmail.com'){
+    showPage('admin');
+  } else {
+    alert('Access denied: Admins only');
+  }
+});
+
 // LOAD MEDIA
 async function loadMediaData(){
   try{
