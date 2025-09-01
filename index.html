@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>FahadFlix - Login</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body {background:#141414;color:#fff;font-family:Arial,Helvetica,sans-serif;text-align:center;padding:2rem}
+    h1 {color:#e50914;font-size:2rem;margin-bottom:1rem}
+    input, button {margin:.5rem;padding:.7rem;border:none;border-radius:5px;font-size:1rem}
+    input {width:250px}
+    button {background:#e50914;color:#fff;cursor:pointer}
+    #profiles {margin-top:2rem;display:flex;justify-content:center;flex-wrap:wrap;gap:1rem}
+    .profile {background:#222;padding:1rem 2rem;border-radius:10px;cursor:pointer}
+    .profile:hover {background:#333}
+  </style>
+</head>
+<body>
+  <h1>FahadFlix</h1>
+
+  <div id="auth-section">
+    <h2>Login / Sign Up</h2>
+    <input type="email" id="email" placeholder="Email" /><br/>
+    <input type="password" id="password" placeholder="Password" /><br/>
+    <button onclick="login()">Login</button>
+    <button onclick="signup()">Sign Up</button>
+  </div>
+
+  <div id="profile-section" style="display:none;">
+    <h2>Select Your Profile</h2>
+    <div id="profiles">Loading...</div>
+    <button onclick="createProfile()">+ Add Profile</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, set, get, child, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+      authDomain: "fahadflix-storage.firebaseapp.com",
+      databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fahadflix-storage",
+      storageBucket: "fahadflix-storage.appspot.com",
+      messagingSenderId: "1064833913945",
+      appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const authSection = document.getElementById("auth-section");
+    const profileSection = document.getElementById("profile-section");
+    const profilesDiv = document.getElementById("profiles");
+
+    // 🔹 Login
+    window.login = async function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert("Login failed: " + err.message);
+      }
+    }
+
+    // 🔹 Sign Up
+    window.signup = async function() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (err) {
+        alert("Signup failed: " + err.message);
+      }
+    }
+
+    // 🔹 Load Profiles
+    async function loadProfiles(userId) {
+      const snapshot = await get(child(ref(db), `users/${userId}/profiles`));
+      profilesDiv.innerHTML = "";
+      if (snapshot.exists()) {
+        const profiles = snapshot.val();
+        Object.keys(profiles).forEach(key => {
+          const profile = profiles[key];
+          const div = document.createElement("div");
+          div.className = "profile";
+          div.innerText = profile.name;
+          div.onclick = () => {
+            localStorage.setItem("selectedProfile", profile.name);
+            window.location.href = "dashboard.html";
+          };
+          profilesDiv.appendChild(div);
+        });
+      } else {
+        profilesDiv.innerHTML = "<p>No profiles found. Add one!</p>";
+      }
+    }
+
+    // 🔹 Add Profile
+    window.createProfile = async function() {
+      const name = prompt("Enter profile name:");
+      if (!name) return;
+      const user = auth.currentUser;
+      const newProfileRef = push(ref(db, `users/${user.uid}/profiles`));
+      await set(newProfileRef, { name });
+      loadProfiles(user.uid);
+    }
+
+    // 🔹 Auth Listener
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        authSection.style.display = "none";
+        profileSection.style.display = "block";
+        loadProfiles(user.uid);
+      } else {
+        authSection.style.display = "block";
+        profileSection.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>
