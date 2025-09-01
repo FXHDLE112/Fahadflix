@@ -7,28 +7,36 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
 body{background:#141414;color:#fff;min-height:100vh}
-header{display:flex;justify-content:space-between;align-items:center;padding:1rem;background:#000}
-header h1{color:#e50914;font-size:1.8rem}
-header button{background:#e50914;color:#fff;border:none;padding:.5rem 1rem;border-radius:5px;cursor:pointer}
-main{padding:1rem}
-h2{margin-bottom:1rem}
-#movies{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem}
-.movie-card{background:#222;padding:1rem;border-radius:10px;transition:transform .2s;cursor:pointer}
-.movie-card:hover{transform:scale(1.05)}
-.movie-card h3{font-size:1.1rem;margin-bottom:.5rem}
-video{width:100%;border-radius:10px}
+.container{max-width:1100px;margin:18px auto;padding:12px}
+.auth-box{max-width:420px;margin:60px auto;padding:20px;background:#1f1f1f;border-radius:10px;text-align:center}
+.auth-box input,.auth-box button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
+.auth-box input{background:#333;color:#fff}
+.auth-box button{background:#e50914;color:#fff;font-weight:700;cursor:pointer}
+.page{display:none}
+.active{display:block}
+h1,h2{margin:14px 0;text-align:center}
 #profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px}
 .profile-card{width:140px;text-align:center;background:#1b1b1b;padding:8px;border-radius:10px;position:relative}
 .profile-card img{width:120px;height:120px;object-fit:cover;border-radius:12px;cursor:pointer}
 .profile-card p{margin:6px 0}
 .profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px}
-.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
-.add-area input[type="text"], .add-area input[type="file"]{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
-.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
 .btn{padding:8px 12px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3)}
-#playerContainer{margin-top:20px;text-align:center}
-#playerContainer video{width:95%;max-width:980px;border-radius:8px;background:#000}
+.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
+.add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
+.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
+#moviesContainer{display:flex;flex-direction:column;gap:20px;padding:12px}
+.row{display:flex;gap:12px;overflow-x:auto}
+.movie-card{background:#1d1d1d;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-width:160px}
+.movie-card img{width:100%;display:block;height:240px;object-fit:cover;transition:transform .25s}
+.movie-card:hover img{transform:scale(1.05)}
+.movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.55);padding:6px 8px;border-radius:6px}
+.episode-card{background:#1f1f1f;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:8px}
+#player{margin:20px auto;text-align:center}
+video{width:95%;max-width:980px;border-radius:8px;background:#000}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
+#searchInput{width:100%;padding:10px;margin:12px 0;border-radius:6px;border:none;background:#222;color:#fff}
+@media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
@@ -38,7 +46,7 @@ video{width:100%;border-radius:10px}
 <div class="container">
 
 <!-- AUTH PAGE -->
-<div id="authPage">
+<div id="authPage" class="page active">
   <div class="auth-box">
     <h2>Login or Sign Up</h2>
     <input id="email" type="email" placeholder="Email">
@@ -49,8 +57,8 @@ video{width:100%;border-radius:10px}
 </div>
 
 <!-- PROFILES PAGE -->
-<div id="profilesPage" style="display:none;">
-  <h2>Who's watching?</h2>
+<div id="profilesPage" class="page">
+  <h1>Who's watching?</h1>
   <div class="add-area">
     <input id="newProfileName" type="text" placeholder="New profile name">
     <input id="newProfileImage" type="file" accept="image/*">
@@ -63,21 +71,63 @@ video{width:100%;border-radius:10px}
 </div>
 
 <!-- HOME PAGE -->
-<div id="homePage" style="display:none;">
-  <header>
-    <h1 id="welcomeTitle">FahadFlix</h1>
-    <button onclick="signOut()">Sign Out</button>
-  </header>
-  <main>
-    <h2>Movies & Shows</h2>
-    <div id="movies">Loading...</div>
-  </main>
-  <div id="playerContainer"></div>
+<div id="homePage" class="page">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h1 id="welcomeTitle">Browse</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="switchProfileBtn" class="btn ghost">Switch Profile</button>
+      <button id="logoutBtn" class="btn">Logout</button>
+      <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
+    </div>
+  </div>
+  <input id="searchInput" type="text" placeholder="Search movies or shows...">
+  <div id="moviesContainer"></div>
+</div>
+
+<!-- EPISODES PAGE -->
+<div id="episodesPage" class="page">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h1 id="showTitle">Show</h1>
+    <button id="backToHome" class="btn ghost">Back</button>
+  </div>
+  <div id="episodesContainer"></div>
+</div>
+
+<!-- PLAYER PAGE -->
+<div id="playerPage" class="page">
+  <h1 id="playerTitle">Player</h1>
+  <div id="player">
+    <video id="videoPlayer" controls crossorigin="anonymous"></video>
+  </div>
+  <div class="controls">
+    <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
+    <button class="btn ghost" id="playerBackBtn">Back</button>
+  </div>
+</div>
+
+<!-- ADMIN PAGE -->
+<div id="adminPage" class="page">
+  <h1>Admin Panel</h1>
+  <div class="add-area">
+    <input id="adminTitle" type="text" placeholder="Title">
+    <input id="adminImg" type="text" placeholder="Image URL">
+    <input id="adminSrc" type="text" placeholder="Video URL">
+    <input id="adminSubs" type="text" placeholder="Subtitles URL (optional)">
+    <select id="adminType">
+      <option value="movies">Movie</option>
+      <option value="shows">Show</option>
+    </select>
+    <button id="addMediaBtn">Add Media</button>
+  </div>
+  <div id="adminList"></div>
+  <button id="saveToGithubBtn" class="btn">Save Changes to GitHub</button>
+  <button onclick="showPage('home')" class="btn ghost">Back</button>
 </div>
 
 </div>
 
 <script>
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
   authDomain: "fahadflix-storage.firebaseapp.com",
@@ -91,20 +141,30 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(), db=firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
 
-// ==== AUTH ====
-document.getElementById('signInBtn').addEventListener('click', async()=>{
+// PAGES
+const pages={
+  auth: document.getElementById('authPage'),
+  profiles: document.getElementById('profilesPage'),
+  home: document.getElementById('homePage'),
+  episodes: document.getElementById('episodesPage'),
+  player: document.getElementById('playerPage'),
+  admin: document.getElementById('adminPage')
+};
+function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
+
+// AUTH
+document.getElementById('signInBtn').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value.trim();
   const pwd=document.getElementById('password').value.trim();
   if(!email||!pwd){ alert('Enter email & password'); return; }
   try{
     const userCred=await auth.signInWithEmailAndPassword(email,pwd);
     currentUser=userCred.user;
-    await loadProfiles();
-    showPage('profiles');
-  }catch(e){ alert("Login failed: "+e.message); }
+    await loadProfiles(); await loadMediaData();
+    showPage('profiles'); renderProfiles();
+  } catch(e){ alert("Login failed: "+e.message); }
 });
-
-document.getElementById('signUpBtn').addEventListener('click', async()=>{
+document.getElementById('signUpBtn').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value.trim();
   const pwd=document.getElementById('password').value.trim();
   if(!email||!pwd){ alert("Enter email & password"); return; }
@@ -113,142 +173,172 @@ document.getElementById('signUpBtn').addEventListener('click', async()=>{
     currentUser=userCred.user;
     profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}];
     await db.ref('profiles/'+currentUser.uid).set(profiles);
-    showPage('profiles');
-  }catch(e){ alert("Signup failed: "+e.message); }
+    await loadMediaData();
+    showPage('profiles'); renderProfiles();
+  } catch(e){ alert("Signup failed: "+e.message); }
 });
 
-// ==== PAGE SWITCH ====
-function showPage(name){
-  document.getElementById('authPage').style.display='none';
-  document.getElementById('profilesPage').style.display='none';
-  document.getElementById('homePage').style.display='none';
-  document.getElementById(name).style.display='block';
-}
-
-// ==== PROFILES ====
-const profilesContainer=document.getElementById('profilesContainer');
+// LOAD / SAVE PROFILES
 async function loadProfiles(){
-  if(!currentUser) return;
-  const snapshot = await db.ref('profiles/'+currentUser.uid).once('value');
-  if(snapshot.exists()){ profiles = snapshot.val(); if(!Array.isArray(profiles)) profiles=[profiles]; }
+  const snapshot=await db.ref('profiles/'+currentUser.uid).once('value');
+  if(snapshot.exists()) profiles=snapshot.val();
   else { profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}]; await db.ref('profiles/'+currentUser.uid).set(profiles);}
-  renderProfiles();
 }
-
 async function saveProfiles(){ if(currentUser) await db.ref('profiles/'+currentUser.uid).set(profiles); }
 
-document.getElementById('addProfileBtn').addEventListener('click', async()=>{
+// PROFILES
+const profilesContainer=document.getElementById('profilesContainer');
+document.getElementById('addProfileBtn').addEventListener('click', async ()=>{
   const name=document.getElementById('newProfileName').value.trim();
   const file=document.getElementById('newProfileImage').files[0];
   if(!name){ alert('Enter name'); return; }
   if(!file){ alert('Pick an image'); return; }
   const reader=new FileReader();
   reader.onload=async e=>{
-    if(!Array.isArray(profiles)) profiles=[];
     profiles.push({name,img:e.target.result});
     await saveProfiles();
-    document.getElementById('newProfileName').value='';
-    document.getElementById('newProfileImage').value='';
+    document.getElementById('newProfileName').value=''; document.getElementById('newProfileImage').value='';
     renderProfiles();
   };
   reader.readAsDataURL(file);
 });
-
 function renderProfiles(){
   profilesContainer.innerHTML='';
-  if(!Array.isArray(profiles)) profiles=[];
   profiles.forEach((p,index)=>{
     const div=document.createElement('div'); div.className='profile-card';
     div.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
       <button class="btn ghost editBtn">Edit</button>
       <button class="btn ghost deleteBtn">Delete</button>`;
     div.querySelector('img').addEventListener('click', ()=>{
-      showPage('homePage'); document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
-      fetchMovies();
+      showPage('home'); document.getElementById('welcomeTitle').innerText='Welcome, '+p.name; renderHome();
+      if(currentUser?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
     });
     div.querySelector('.editBtn').addEventListener('click', ()=>{
       const newName=prompt('Edit profile name:',p.name);
       if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); }
     });
-    div.querySelector('.deleteBtn').addEventListener('click', async()=>{
+    div.querySelector('.deleteBtn').addEventListener('click', async ()=>{
       profiles.splice(index,1); await saveProfiles(); renderProfiles();
     });
     profilesContainer.appendChild(div);
   });
 }
 
-// Sign out
-document.getElementById('signOutBtn').addEventListener('click', async()=>{ await auth.signOut(); currentUser=null; showPage('authPage'); });
-function signOut(){ auth.signOut(); currentUser=null; showPage('authPage'); }
+// SIGN OUT / SWITCH
+document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
+document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
+document.getElementById('adminToggleBtn').addEventListener('click', ()=> showPage('admin'));
 
-// ==== FETCH MOVIES.JSON FROM GITHUB ====
-async function fetchMovies(){
+// LOAD MEDIA
+async function loadMediaData(){
   try{
-    const response = await fetch("https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json");
-    if(!response.ok) throw new Error("Failed to fetch movies.json");
-    mediaData = await response.json();
-    renderHome();
-  }catch(e){ console.error("Error fetching movies:",e); document.getElementById("movies").innerText="Failed to load movies."; }
+    const response=await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/refs/heads/main/movies.json'); 
+    mediaData=await response.json();
+    if(!mediaData.movies) mediaData.movies=[]; if(!mediaData.shows) mediaData.shows=[];
+  } catch(e){ console.error('Failed to load media data:',e); mediaData={movies:[], shows:[]}; }
 }
 
-// ==== RENDER HOME & RESUME ====
-function renderHome(){
-  const container=document.getElementById("movies");
-  container.innerHTML="";
-  (mediaData.movies||[]).forEach(m=>{
+// HOME PAGE
+const moviesContainer=document.getElementById('moviesContainer');
+document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
+function renderHome(search=''){
+  moviesContainer.innerHTML='';
+  const filteredMovies=(mediaData.movies||[]).filter(m=>m?.title?.toLowerCase().includes(search.toLowerCase()));
+  const filteredShows=(mediaData.shows||[]).filter(s=>s?.title?.toLowerCase().includes(search.toLowerCase()));
+  const mTitle=document.createElement('h2'); mTitle.innerText="Movies"; moviesContainer.appendChild(mTitle);
+  const mRow=document.createElement('div'); mRow.className="row";
+  filteredMovies.forEach(m=>{
     const card=document.createElement('div'); card.className='movie-card';
-    card.innerHTML=`<h3>${m.title}</h3>`;
-    card.onclick=()=>openVideoPlayer(m.title,m.url);
-    container.appendChild(card);
+    card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+    card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
+    mRow.appendChild(card);
   });
-  (mediaData.shows||[]).forEach(s=>{
-    if(s.seasons){ // show with episodes
-      s.seasons.forEach(season=>{
-        season.episodes.forEach(ep=>{
-          const card=document.createElement('div'); card.className='movie-card';
-          card.innerHTML=`<h3>${s.title} - ${ep.title}</h3>`;
-          card.onclick=()=>openVideoPlayer(ep.title,ep.src);
-          container.appendChild(card);
-        });
-      });
-    } else { // single show
-      const card=document.createElement('div'); card.className='movie-card';
-      card.innerHTML=`<h3>${s.title}</h3>`;
-      card.onclick=()=>openVideoPlayer(s.title,s.src);
-      container.appendChild(card);
-    }
+  moviesContainer.appendChild(mRow);
+  const sTitle=document.createElement('h2'); sTitle.innerText="Shows"; moviesContainer.appendChild(sTitle);
+  const sRow=document.createElement('div'); sRow.className="row";
+  filteredShows.forEach(s=>{
+    const card=document.createElement('div'); card.className='movie-card';
+    card.innerHTML=`<img src="${s.img||''}"><div class="title">${s.title||'Untitled'}</div>`;
+    card.addEventListener('click', ()=> openShow(s));
+    sRow.appendChild(card);
   });
+  moviesContainer.appendChild(sRow);
 }
 
-// ==== VIDEO PLAYER WITH RESUME ====
-function openVideoPlayer(title, src){
-  const container=document.getElementById('movies');
-  container.innerHTML='';
-  const playerContainer=document.getElementById('playerContainer');
-  playerContainer.innerHTML='';
-
-  const backBtn=document.createElement('button'); backBtn.innerText='Back'; backBtn.className='btn';
-  backBtn.onclick=renderHome; playerContainer.appendChild(backBtn);
-
-  const video=document.createElement('video'); video.controls=true; video.src=src;
-  playerContainer.appendChild(video);
-
-  // Load resume time from Firebase
-  if(currentUser){
-    db.ref(`resume/${currentUser.uid}/${title}`).once('value').then(snapshot=>{
-      if(snapshot.exists()) video.currentTime = snapshot.val();
-    });
+// SHOW / EPISODES
+document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
+function openShow(show){
+  showPage('episodes'); document.getElementById('showTitle').innerText=show.title||'Show';
+  const episodesContainer=document.getElementById('episodesContainer'); episodesContainer.innerHTML='';
+  if(show.seasons?.length>1){
+    const seasonSelect=document.createElement('select');
+    show.seasons.forEach((s,i)=>{ const option=document.createElement('option'); option.value=i; option.text='Season '+(s.season||i+1); seasonSelect.appendChild(option); });
+    episodesContainer.appendChild(seasonSelect);
+    seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
   }
-
-  // Save resume time on progress
-  video.ontimeupdate = ()=>{
-    if(currentUser && !video.paused){
-      db.ref(`resume/${currentUser.uid}/${title}`).set(video.currentTime);
-    }
-  };
-
-  video.play().catch(()=>{});
+  renderEpisodes(show,0);
 }
+function renderEpisodes(show,seasonIndex){
+  const episodesContainer=document.getElementById('episodesContainer');
+  const dropdown=episodesContainer.querySelector('select');
+  episodesContainer.innerHTML=''; if(dropdown) episodesContainer.appendChild(dropdown);
+  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
+  (season.episodes||[]).forEach(ep=>{
+    const epCard=document.createElement('div'); epCard.className='episode-card'; epCard.innerText=ep.title||'Untitled';
+    epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+    episodesContainer.appendChild(epCard);
+  });
+}
+
+// PLAYER
+const videoPlayer=document.getElementById('videoPlayer');
+document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
+document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
+  const tracks=videoPlayer.textTracks||[]; for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
+});
+async function openPlayer(title,src,subs){
+  showPage('player'); videoPlayer.innerHTML=''; videoPlayer.src=src||'';
+  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+  videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
+  if(subs){ const track=document.createElement('track'); track.src=subs; track.kind='subtitles'; track.srclang='en'; track.label='English'; videoPlayer.appendChild(track); }
+  videoPlayer.play().catch(()=>{});
+}
+
+// ADMIN
+document.getElementById('addMediaBtn').addEventListener('click', ()=>{
+  const title=document.getElementById('adminTitle').value.trim();
+  const img=document.getElementById('adminImg').value.trim();
+  const src=document.getElementById('adminSrc').value.trim();
+  const subs=document.getElementById('adminSubs').value.trim();
+  const type=document.getElementById('adminType').value;
+  if(!title||!img||!src){ alert('Fill all required fields'); return; }
+  if(!mediaData[type]) mediaData[type]=[];
+  mediaData[type].push({title,img,src,subtitles:subs}); renderAdminList();
+});
+function renderAdminList(){
+  const adminList=document.getElementById('adminList'); adminList.innerHTML='';
+  ['movies','shows'].forEach(type=>{
+    const items=(mediaData[type]||[]);
+    items.forEach((m,i)=>{
+      const div=document.createElement('div'); div.className='episode-card';
+      div.innerHTML=`<strong>${m.title||'Untitled'}</strong> [${type}]
+      <button onclick="editMedia('${type}',${i})">Edit</button>
+      <button onclick="deleteMedia('${type}',${i})">Delete</button>`;
+      adminList.appendChild(div);
+    });
+  });
+}
+function editMedia(type,index){
+  const m=(mediaData[type]||[])[index]; if(!m) return;
+  const newTitle=prompt('Title:',m.title); if(newTitle) mediaData[type][index].title=newTitle;
+  const newImg=prompt('Image URL:',m.img); if(newImg) mediaData[type][index].img=newImg;
+  const newSrc=prompt('Video URL:',m.src); if(newSrc) mediaData[type][index].src=newSrc;
+  const newSubs=prompt('Subtitles URL:',m.subtitles||''); mediaData[type][index].subtitles=newSubs;
+  renderAdminList();
+}
+function deleteMedia(type,index){ if(!mediaData[type]) return; mediaData[type].splice(index,1); renderAdminList(); }
 </script>
 </body>
 </html>
