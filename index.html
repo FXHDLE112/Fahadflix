@@ -160,7 +160,8 @@ document.getElementById('signInBtn').addEventListener('click', async ()=>{
   try{
     const userCred=await auth.signInWithEmailAndPassword(email,pwd);
     currentUser=userCred.user;
-    await loadProfiles(); await loadMediaData();
+    await loadProfiles(); 
+    await loadMediaData();
     showPage('profiles'); renderProfiles();
   } catch(e){ alert("Login failed: "+e.message); }
 });
@@ -209,10 +210,23 @@ function renderProfiles(){
     div.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
       <button class="btn ghost editBtn">Edit</button>
       <button class="btn ghost deleteBtn">Delete</button>`;
-    div.querySelector('img').addEventListener('click', ()=>{
-      showPage('home'); document.getElementById('welcomeTitle').innerText='Welcome, '+p.name; renderHome();
+
+    // PROFILE CLICK: Load media first, then render home
+    div.querySelector('img').addEventListener('click', async ()=>{
+      showPage('home');
+      document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
       if(currentUser?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
+      
+      try{
+        await loadMediaData();
+        console.log('Media loaded:', mediaData); // debug log
+        renderHome();
+      } catch(err){
+        console.error('Failed to load media:', err);
+        alert('Failed to load media data.');
+      }
     });
+
     div.querySelector('.editBtn').addEventListener('click', ()=>{
       const newName=prompt('Edit profile name:',p.name);
       if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); }
@@ -224,29 +238,7 @@ function renderProfiles(){
   });
 }
 
-// PROFILES CLICK
-div.querySelector('img').addEventListener('click', async () => {
-  showPage('home');
-  document.getElementById('welcomeTitle').innerText = 'Welcome, ' + p.name;
-
-  // Show admin panel for your email
-  if (currentUser?.email === 'fxhdle2@gmail.com') {
-    document.getElementById('adminToggleBtn').style.display = 'inline-block';
-  }
-
-  try {
-    // Load media JSON and wait for it
-    await loadMediaData();
-    console.log('Media loaded:', mediaData); // Debug log
-
-    // Render home after media is loaded
-    renderHome();
-  } catch (err) {
-    console.error('Failed to load media:', err);
-    alert('Failed to load media data.');
-  }
-});
-  // SIGN OUT / SWITCH
+// SIGN OUT / SWITCH
 document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
@@ -255,10 +247,14 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=> showPag
 // LOAD MEDIA
 async function loadMediaData(){
   try{
-const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json');
-    mediaData=await response.json();
-    if(!mediaData.movies) mediaData.movies=[]; if(!mediaData.shows) mediaData.shows=[];
-  } catch(e){ console.error('Failed to load media data:',e); mediaData={movies:[], shows:[]}; }
+    const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json');
+    mediaData = await response.json();
+    if(!mediaData.movies) mediaData.movies=[]; 
+    if(!mediaData.shows) mediaData.shows=[];
+  } catch(e){ 
+    console.error('Failed to load media data:',e); 
+    mediaData={movies:[], shows:[]}; 
+  }
 }
 
 // HOME PAGE
@@ -268,6 +264,7 @@ function renderHome(search=''){
   moviesContainer.innerHTML='';
   const filteredMovies=(mediaData.movies||[]).filter(m=>m?.title?.toLowerCase().includes(search.toLowerCase()));
   const filteredShows=(mediaData.shows||[]).filter(s=>s?.title?.toLowerCase().includes(search.toLowerCase()));
+  
   const mTitle=document.createElement('h2'); mTitle.innerText="Movies"; moviesContainer.appendChild(mTitle);
   const mRow=document.createElement('div'); mRow.className="row";
   filteredMovies.forEach(m=>{
@@ -277,6 +274,7 @@ function renderHome(search=''){
     mRow.appendChild(card);
   });
   moviesContainer.appendChild(mRow);
+
   const sTitle=document.createElement('h2'); sTitle.innerText="Shows"; moviesContainer.appendChild(sTitle);
   const sRow=document.createElement('div'); sRow.className="row";
   filteredShows.forEach(s=>{
@@ -287,6 +285,9 @@ function renderHome(search=''){
   });
   moviesContainer.appendChild(sRow);
 }
+
+// The rest of your original player/admin/show functions remain unchanged...
+</script>
 
 // SHOW / EPISODES
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
