@@ -224,7 +224,29 @@ function renderProfiles(){
   });
 }
 
-// SIGN OUT / SWITCH
+// PROFILES CLICK
+div.querySelector('img').addEventListener('click', async () => {
+  showPage('home');
+  document.getElementById('welcomeTitle').innerText = 'Welcome, ' + p.name;
+
+  // Show admin panel for your email
+  if (currentUser?.email === 'fxhdle2@gmail.com') {
+    document.getElementById('adminToggleBtn').style.display = 'inline-block';
+  }
+
+  try {
+    // Load media JSON and wait for it
+    await loadMediaData();
+    console.log('Media loaded:', mediaData); // Debug log
+
+    // Render home after media is loaded
+    renderHome();
+  } catch (err) {
+    console.error('Failed to load media:', err);
+    alert('Failed to load media data.');
+  }
+});
+  // SIGN OUT / SWITCH
 document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
