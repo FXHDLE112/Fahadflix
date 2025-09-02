@@ -196,7 +196,7 @@ document.getElementById('addProfileBtn').addEventListener('click', async ()=>{
   if(!file){ alert('Pick an image'); return; }
   const reader=new FileReader();
   reader.onload=async e=>{
-    profiles.push({name,img:e.target.result});
+    profiles.push({name: name,img:e.target.result});
     await saveProfiles();
     document.getElementById('newProfileName').value=''; document.getElementById('newProfileImage').value='';
     renderProfiles();
@@ -211,20 +211,11 @@ function renderProfiles(){
       <button class="btn ghost editBtn">Edit</button>
       <button class="btn ghost deleteBtn">Delete</button>`;
 
-    // PROFILE CLICK: Load media first, then render home
     div.querySelector('img').addEventListener('click', async ()=>{
       showPage('home');
       document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
       if(currentUser?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
-      
-      try{
-        await loadMediaData();
-        console.log('Media loaded:', mediaData); // debug log
-        renderHome();
-      } catch(err){
-        console.error('Failed to load media:', err);
-        alert('Failed to load media data.');
-      }
+      await loadMediaData(); renderHome();
     });
 
     div.querySelector('.editBtn').addEventListener('click', ()=>{
@@ -242,15 +233,9 @@ function renderProfiles(){
 document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
-document.getElementById('adminToggleBtn').addEventListener('click', ()=> showPage('admin'));
-
-// ADMIN PANEL PROTECTION
 document.getElementById('adminToggleBtn').addEventListener('click', ()=>{
-  if(currentUser?.email==='fxhdle2@gmail.com'){
-    showPage('admin');
-  } else {
-    alert('Access denied: Admins only');
-  }
+  if(currentUser?.email==='fxhdle2@gmail.com') showPage('admin');
+  else alert('Access denied: Admins only');
 });
 
 // LOAD MEDIA
@@ -267,214 +252,56 @@ async function loadMediaData(){
 }
 
 // HOME PAGE
+const moviesContainer=document.getElementById('moviesContainer');
+document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
 
-  // --- RENDER HOME ---
 async function renderHome(search='') {
   moviesContainer.innerHTML='';
 
-  // --- CONTINUE WATCHING ---
+  // --- Continue Watching ---
   const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
   const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
   const continueWatching = [];
-
   const allMedia = [...(mediaData.movies||[]), ...(mediaData.shows||[])];
-
-  allMedia.forEach(item => {
-    if(item.title && item.src && resumeData[item.title] && resumeData[item.title] > 0) {
-      continueWatching.push({
-        title: item.title,
-        img: item.img,
-        src: item.src,
-        subtitles: item.subtitles,
-        progress: resumeData[item.title],
-        duration: item.duration || 1 // fallback duration
-      });
+  allMedia.forEach(item=>{
+    if(item.title && item.src && resumeData[item.title] && resumeData[item.title] > 0){
+      continueWatching.push({...item, progress: resumeData[item.title], duration: item.duration||1});
     }
   });
-
-  if(continueWatching.length) {
-    const cwTitle = document.createElement('h2'); 
-    cwTitle.innerText = 'Continue Watching'; 
-    moviesContainer.appendChild(cwTitle);
-
-    const cwRow = document.createElement('div'); 
-    cwRow.className = 'row';
-
-    continueWatching.forEach(m => {
+  if(continueWatching.length){
+    const cwTitle = document.createElement('h2'); cwTitle.innerText='Continue Watching'; moviesContainer.appendChild(cwTitle);
+    const cwRow = document.createElement('div'); cwRow.className='row';
+    continueWatching.forEach(m=>{
       if(search && !m.title.toLowerCase().includes(search.toLowerCase())) return;
-
-      const progressPercent = (m.duration > 0 ? (m.progress / m.duration * 100) : 0);
-
-      const card = document.createElement('div'); 
-      card.className = 'movie-card';
-      card.innerHTML = `
-        <img src="${m.img||''}">
-        <div class="title">${m.title||'Untitled'}</div>
-        <div class="progress-bar" style="
-          position:absolute; bottom:0; left:0; height:6px; width:100%; background:rgba(255,255,255,0.2);
-        ">
-          <div style="width:${progressPercent}%; height:100%; background:#e50914;"></div>
-        </div>
-      `;
+      const progressPercent = (m.duration>0? (m.progress/m.duration*100):0);
+      const card=document.createElement('div'); card.className='movie-card';
+      card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>
+        <div style="position:absolute;bottom:0;left:0;height:6px;width:100%;background:rgba(255,255,255,0.2)">
+          <div style="width:${progressPercent}%;height:100%;background:#e50914"></div>
+        </div>`;
       card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
       cwRow.appendChild(card);
     });
-
     moviesContainer.appendChild(cwRow);
   }
 
-  // --- MOVIES ---
-  const filteredMovies = (mediaData.movies||[]).filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase())));
-  if(filteredMovies.length) {
-    const mTitle = document.createElement('h2'); mTitle.innerText = 'Movies'; moviesContainer.appendChild(mTitle);
-
-    const mRow = document.createElement('div'); mRow.className = 'row';
-    filteredMovies.forEach(m => {
-      const card = document.createElement('div'); card.className = 'movie-card';
-      card.innerHTML = `<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
-      card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
-      mRow.appendChild(card);
-    });
-    moviesContainer.appendChild(mRow);
-  }
-
-  // --- SHOWS ---
-  const filteredShows = (mediaData.shows||[]).filter(s => s.src && (!search || s.title.toLowerCase().includes(search.toLowerCase())));
-  if(filteredShows.length) {
-    const sTitle = document.createElement('h2'); sTitle.innerText = 'Shows'; moviesContainer.appendChild(sTitle);
-
-    const sRow = document.createElement('div'); sRow.className = 'row';
-    filteredShows.forEach(s => {
-      const card = document.createElement('div'); card.className = 'movie-card';
-      card.innerHTML = `<img src="${s.img||''}"><div class="title">${s.title||'Untitled'}</div>`;
-      card.addEventListener('click', ()=> openShow(s));
-      sRow.appendChild(card);
-    });
-    moviesContainer.appendChild(sRow);
-  }
-}
-
-// --- OPEN PLAYER ---
-async function openPlayer(title, src, subs){
-  if(!src){ 
-    alert('Video source not available'); 
-    return; 
-  }
-
-  showPage('player'); 
-  videoPlayer.innerHTML=''; 
-  videoPlayer.src=src;
-
-  // Resume playback if exists
-  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
-
-  // Save progress
-  videoPlayer.ontimeupdate = ()=>{ 
-    if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
-  };
-
-  // Load subtitles if provided
-  videoPlayer.innerHTML = ''; // clear previous tracks
-  if(subs){ 
-    const track = document.createElement('track'); 
-    track.src = subs; 
-    track.kind = 'subtitles'; 
-    track.srclang = 'en'; 
-    track.label = 'English'; 
-    videoPlayer.appendChild(track); 
-  }
-
-  videoPlayer.play().catch(()=>{});
-}
-
-
-// SHOW / EPISODES
-document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
-function openShow(show){
-  showPage('episodes'); 
-  document.getElementById('showTitle').innerText = show.title || 'Show';
-
-  const episodesContainer = document.getElementById('episodesContainer'); 
-  episodesContainer.innerHTML = '';
-
-  // HOME PAGE
-const moviesContainer=document.getElementById('moviesContainer');
-document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
-function renderHome(search=''){
-  moviesContainer.innerHTML='';
-  const filteredMovies=(mediaData.movies||[]).filter(m=>m?.title?.toLowerCase().includes(search.toLowerCase()));
-  const filteredShows=(mediaData.shows||[]).filter(s=>s?.title?.toLowerCase().includes(search.toLowerCase()));
-  
-  const mTitle=document.createElement('h2'); mTitle.innerText="Movies"; moviesContainer.appendChild(mTitle);
-  const mRow=document.createElement('div'); mRow.className="row";
-  filteredMovies.forEach(m=>{
-    const card=document.createElement('div'); card.className='movie-card';
-    card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
-    card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
-    mRow.appendChild(card);
-  });
-  moviesContainer.appendChild(mRow);
-
-  const sTitle=document.createElement('h2'); sTitle.innerText="Shows"; moviesContainer.appendChild(sTitle);
-  const sRow=document.createElement('div'); sRow.className="row";
-  filteredShows.forEach(s=>{
-    const card=document.createElement('div'); card.className='movie-card';
-    card.innerHTML=`<img src="${s.img||''}"><div class="title">${s.title||'Untitled'}</div>`;
-    card.addEventListener('click', ()=> openShow(s));
-    sRow.appendChild(card);
-  });
-  moviesContainer.appendChild(sRow);
-}
-  // Season selector (if multiple)
-  if(show.seasons?.length > 1){
-    const seasonSelect = document.createElement('select');
-    show.seasons.forEach((s,i)=>{ 
-      const option=document.createElement('option'); 
-      option.value=i; 
-
-      // count available vs total
-      const total = (s.episodes||[]).length;
-      const available = (s.episodes||[]).filter(ep => ep.src).length;
-
-      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
-      seasonSelect.appendChild(option); 
-    });
-    episodesContainer.appendChild(seasonSelect);
-    seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
-  }
-
-  renderEpisodes(show,0);
-}
-
-function renderEpisodes(show,seasonIndex){
-  const episodesContainer=document.getElementById('episodesContainer');
-  const dropdown=episodesContainer.querySelector('select');
-  episodesContainer.innerHTML=''; 
-  if(dropdown) episodesContainer.appendChild(dropdown);
-
-  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
-
-  (season.episodes||[]).forEach(ep=>{
-    const epCard=document.createElement('div'); 
-    epCard.className='episode-card'; 
-
-    if(!ep.src){
-      // Coming Soon
-      epCard.innerHTML = `
-        <strong>${ep.title || 'Untitled'}</strong>
-        <p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>
-      `;
-      epCard.style.opacity="0.6";
-      epCard.style.cursor="default";
-    } else {
-      epCard.innerText = ep.title || 'Untitled';
-      epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+  // --- Movies & Shows ---
+  [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
+    const filtered = (arr||[]).filter(m=>m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase())));
+    if(filtered.length){
+      const titleEl=document.createElement('h2'); titleEl.innerText=label; moviesContainer.appendChild(titleEl);
+      const row=document.createElement('div'); row.className='row';
+      filtered.forEach(m=>{
+        const card=document.createElement('div'); card.className='movie-card';
+        card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+        card.addEventListener('click', ()=> label==='Shows'? openShow(m): openPlayer(m.title,m.src,m.subtitles));
+        row.appendChild(card);
+      });
+      moviesContainer.appendChild(row);
     }
-
-    episodesContainer.appendChild(epCard);
   });
 }
+
 // PLAYER
 const videoPlayer=document.getElementById('videoPlayer');
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
@@ -482,25 +309,50 @@ document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
   const tracks=videoPlayer.textTracks||[]; 
   for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
 });
-async function openPlayer(title,src,subs){
+async function openPlayer(title, src, subs){
+  if(!src){ alert('Video source not available'); return; }
   showPage('player'); 
-  videoPlayer.innerHTML=''; 
-  videoPlayer.src=src||'';
+  videoPlayer.src=src;
   const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+  if(snapshot.exists()) videoPlayer.currentTime=snapshot.val();
   videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
-  if(subs){ 
-    const track=document.createElement('track'); 
-    track.src=subs; 
-    track.kind='subtitles'; 
-    track.srclang='en'; 
-    track.label='English'; 
-    videoPlayer.appendChild(track); 
-  }
+  videoPlayer.innerHTML='';
+  if(subs){ const track=document.createElement('track'); track.src=subs; track.kind='subtitles'; track.srclang='en'; track.label='English'; videoPlayer.appendChild(track);}
   videoPlayer.play().catch(()=>{});
 }
 
-// ADMIN
+// SHOWS
+document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
+function openShow(show){
+  showPage('episodes'); document.getElementById('showTitle').innerText=show.title||'Show';
+  const episodesContainer=document.getElementById('episodesContainer'); episodesContainer.innerHTML='';
+  if(show.seasons?.length>1){
+    const seasonSelect=document.createElement('select');
+    show.seasons.forEach((s,i)=>{
+      const total=(s.episodes||[]).length;
+      const available=(s.episodes||[]).filter(ep=>ep.src).length;
+      const opt=document.createElement('option'); opt.value=i; opt.text=`Season ${s.season||i+1} (${available}/${total} Available)`; seasonSelect.appendChild(opt);
+    });
+    episodesContainer.appendChild(seasonSelect);
+    seasonSelect.addEventListener('change', ()=> renderEpisodes(show, seasonSelect.value));
+  }
+  renderEpisodes(show,0);
+}
+function renderEpisodes(show, seasonIndex){
+  const episodesContainer=document.getElementById('episodesContainer');
+  const dropdown=episodesContainer.querySelector('select'); episodesContainer.innerHTML=''; if(dropdown) episodesContainer.appendChild(dropdown);
+  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
+  (season.episodes||[]).forEach(ep=>{
+    const epCard=document.createElement('div'); epCard.className='episode-card';
+    if(!ep.src){
+      epCard.innerHTML=`<strong>${ep.title||'Untitled'}</strong><p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>`;
+      epCard.style.opacity="0.6"; epCard.style.cursor="default";
+    } else { epCard.innerText=ep.title||'Untitled'; epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles)); }
+    episodesContainer.appendChild(epCard);
+  });
+}
+
+// ADMIN PANEL
 document.getElementById('addMediaBtn').addEventListener('click', ()=>{
   const title=document.getElementById('adminTitle').value.trim();
   const img=document.getElementById('adminImg').value.trim();
@@ -509,13 +361,13 @@ document.getElementById('addMediaBtn').addEventListener('click', ()=>{
   const type=document.getElementById('adminType').value;
   if(!title||!img||!src){ alert('Fill all required fields'); return; }
   if(!mediaData[type]) mediaData[type]=[];
-  mediaData[type].push({title,img,src,subtitles:subs}); renderAdminList();
+  mediaData[type].push({title,img,src,subtitles:subs});
+  renderAdminList();
 });
 function renderAdminList(){
   const adminList=document.getElementById('adminList'); adminList.innerHTML='';
   ['movies','shows'].forEach(type=>{
-    const items=(mediaData[type]||[]);
-    items.forEach((m,i)=>{
+    (mediaData[type]||[]).forEach((m,i)=>{
       const div=document.createElement('div'); div.className='episode-card';
       div.innerHTML=`<strong>${m.title||'Untitled'}</strong> [${type}]
       <button onclick="editMedia('${type}',${i})">Edit</button>
