@@ -140,6 +140,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.database();
 let currentUser = null, profiles = [], mediaData = {movies: [], shows: []};
+let currentPlayingTitle = ''; // Track current video
 
 // PAGES
 const pages = {
@@ -259,22 +260,6 @@ async function renderHome(search=''){
   const resumeContainer = document.getElementById('resumeContainer');
   resumeContainer.innerHTML='';
 
-  // Flatten episodes for resume check
-  const allEpisodes = [];
-  mediaData.shows.forEach(show => {
-    show.seasons?.forEach(season => {
-      season.episodes?.forEach(ep => {
-        allEpisodes.push({ 
-          title: ep.title, 
-          src: ep.src, 
-          img: show.img, 
-          duration: ep.duration || 1,
-          subtitles: ep.subtitles
-        });
-      });
-    });
-  });
-
   // RESUME WATCHING
   let resumeData = {};
   try { 
@@ -285,14 +270,14 @@ async function renderHome(search=''){
   }
   const resumeKeys = Object.keys(resumeData)
     .map(title => ({title, ...resumeData[title]}))
-    .filter(item => item.time != null)
+    .filter(item => item.time > 0)
     .sort((a,b)=>b.lastWatched - a.lastWatched);
 
   if(resumeKeys.length){
     const titleEl = document.createElement('h2'); titleEl.innerText = 'Resume Watching'; resumeContainer.appendChild(titleEl);
     const row = document.createElement('div'); row.className='row';
     resumeKeys.forEach(item=>{
-      let media = mediaData.movies.find(m=>m.title===item.title) || allEpisodes.find(ep=>ep.title===item.title);
+      let media = mediaData.movies.find(m=>m.title===item.title) || mediaData.shows.find(s=>s.title===item.title);
       if(!media) return;
       const percent = Math.floor((item.time / (media.duration || 1)) * 100);
       const card = document.createElement('div'); card.className='movie-card';
@@ -302,7 +287,7 @@ async function renderHome(search=''){
         <div style="position:absolute;bottom:0;left:0;width:100%;height:6px;background:#333;border-radius:0 0 8px 8px;">
           <div style="width:${percent}%;height:100%;background:#e50914;border-radius:0 0 8px 8px;"></div>
         </div>`;
-      card.addEventListener('click', ()=> media.src ? openPlayer(item.title, media.src, media.subtitles) : openShow(media));
+      card.addEventListener('click', ()=>{ media.src ? openPlayer(item.title, media.src, media.subtitles) : openShow(media); });
       row.appendChild(card);
     });
     resumeContainer.appendChild(row);
@@ -310,7 +295,7 @@ async function renderHome(search=''){
 
   [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
     let filtered = arr || [];
-    filtered = filtered.filter(m => !search || (m.title && m.title.toLowerCase().includes(search.toLowerCase())));
+    filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase()));
     if(label==='Movies') filtered = filtered.filter(m => m.src);
     if(filtered.length){
       const titleEl=document.createElement('h2'); titleEl.innerText=label; moviesContainer.appendChild(titleEl);
@@ -344,24 +329,22 @@ function openShow(show){
       const available = (s.episodes||[]).filter(ep => ep.src).length;
       const option=document.createElement('option'); 
       option.value=i; 
-      option.text = `Season ${s.season || i+1} (${available}/${total})`; 
+      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
       seasonSelect.appendChild(option); 
     });
-    seasonSelect.addEventListener('change', ()=> renderEpisodes(show, parseInt(seasonSelect.value)));
     episodesContainer.appendChild(seasonSelect);
-    renderEpisodes(show,0);
+    seasonSelect.addEventListener('change', ()=> renderEpisodes(show, seasonSelect.value));
+    renderEpisodes(show, seasonSelect.value);
   } else { renderEpisodes(show,0); }
 }
-
-function renderEpisodes(show,seasonIndex){
-  const episodesContainer = document.getElementById('episodesContainer'); 
-  episodesContainer.innerHTML=''; 
+function renderEpisodes(show, seasonIndex){
+  const container = document.getElementById('episodesContainer'); container.innerHTML='';
   const season = show.seasons[seasonIndex];
-  season.episodes?.forEach(ep=>{
-    const div = document.createElement('div'); div.className='episode-card';
+  (season.episodes||[]).forEach(ep=>{
+    const div=document.createElement('div'); div.className='episode-card';
     div.innerText = ep.title || 'Untitled';
-    if(ep.src){ div.addEventListener('click', ()=> openPlayer(ep.title, ep.src, ep.subtitles)); } else { div.style.opacity=0.5; }
-    episodesContainer.appendChild(div);
+    if(ep.src) div.addEventListener('click', ()=> openPlayer(ep.title, ep.src, ep.subtitles));
+    container.appendChild(div);
   });
 }
 
@@ -369,39 +352,69 @@ function renderEpisodes(show,seasonIndex){
 const videoPlayer = document.getElementById('videoPlayer');
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
 document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
-  for(let i=0;i<videoPlayer.textTracks.length;i++){
-    videoPlayer.textTracks[i].mode = videoPlayer.textTracks[i].mode==='showing'?'hidden':'showing';
-  }
+  for(const t of videoPlayer.textTracks) t.mode = t.mode==='showing'?'hidden':'showing';
 });
 function openPlayer(title, src, subs){
   showPage('player'); 
   document.getElementById('playerTitle').innerText = title;
   videoPlayer.src = src;
   videoPlayer.innerHTML=''; 
+  currentPlayingTitle = title;
+
   if(subs){ 
     const track = document.createElement('track'); 
     track.kind='subtitles'; track.label='English'; track.srclang='en'; track.src=subs; track.default=true; 
     videoPlayer.appendChild(track); 
   }
-  videoPlayer.play();
+
+  // Load previous time
+  (async ()=>{
+    let resumeTime = 0;
+    try {
+      const snap = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+      if(snap.exists()) resumeTime = snap.val().time || 0;
+    } catch{ 
+      const localData = JSON.parse(localStorage.getItem('resumeData')||'{}');
+      if(localData[title]) resumeTime = localData[title].time || 0;
+    }
+    videoPlayer.currentTime = resumeTime;
+    videoPlayer.play();
+  })();
 }
 
+// SAVE PROGRESS
+videoPlayer.addEventListener('timeupdate', async ()=>{
+  if(!currentPlayingTitle) return;
+  const time = videoPlayer.currentTime;
+  const lastWatched = Date.now();
+  const resumeObj = {[currentPlayingTitle]: {time, lastWatched}};
+  try {
+    if(currentUser?.uid){
+      await db.ref(`resume/${currentUser.uid}`).update(resumeObj);
+    } else {
+      const localData = JSON.parse(localStorage.getItem('resumeData')||'{}');
+      localData[currentPlayingTitle] = {time,lastWatched};
+      localStorage.setItem('resumeData', JSON.stringify(localData));
+    }
+  } catch(e){ console.error(e); }
+});
+
 // ADMIN
-document.getElementById('addMediaBtn').addEventListener('click', ()=>{
+document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
   const title=document.getElementById('adminTitle').value.trim();
   const img=document.getElementById('adminImg').value.trim();
   const src=document.getElementById('adminSrc').value.trim();
-  const subs=document.getElementById('adminSubs').value.trim();
+  const subs=document.getElementById('adminSubs').value.trim()||null;
   const type=document.getElementById('adminType').value;
-  if(!title){ alert('Enter title'); return; }
-  const obj={title,img,src,subtitles:subs};
-  if(type==='movies'){ mediaData.movies.push(obj); } else { mediaData.shows.push(obj); }
-  renderHome(); alert('Added!'); 
+  if(!title) return alert('Enter title');
+  mediaData[type] = mediaData[type]||[];
+  mediaData[type].push({title,img,src,subtitles:subs});
+  alert('Added!');
+  renderHome();
 });
 
-// INITIAL
 auth.onAuthStateChanged(async user=>{
-  if(user){ currentUser=user; await loadProfiles(); await loadMediaData(); showPage('profiles'); renderProfiles(); } else { showPage('auth'); }
+  if(user){ currentUser=user; await loadProfiles(); renderProfiles(); showPage('profiles'); }
 });
 </script>
 </body>
