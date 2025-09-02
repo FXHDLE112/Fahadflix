@@ -331,17 +331,34 @@ function renderEpisodes(show,seasonIndex){
   });
 }
 
-// PLAYER
-const videoPlayer=document.getElementById('videoPlayer');
-document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
-document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{ const tracks=videoPlayer.textTracks||[]; for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing'); });
-async function openPlayer(title,src,subs){
+// PLAYER: Save progress offline as fallback
+async function openPlayer(title, src, subs){
   showPage('player'); 
   videoPlayer.innerHTML=''; 
   videoPlayer.src=src||'';
-  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
-  videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
+
+  let lastTime = 0;
+  try{
+    const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+    if(snapshot.exists()) lastTime = snapshot.val().time || 0;
+  } catch {
+    const offlineData = JSON.parse(localStorage.getItem('resumeData') || '{}');
+    if(offlineData[title]) lastTime = offlineData[title].time || 0;
+  }
+  videoPlayer.currentTime = lastTime;
+
+  videoPlayer.ontimeupdate = ()=>{
+    if(!videoPlayer.paused){
+      const progressObj = {time: videoPlayer.currentTime, lastWatched: Date.now()};
+      try{ db.ref(`resume/${currentUser.uid}/${title}`).set(progressObj); } 
+      catch { 
+        const offlineData = JSON.parse(localStorage.getItem('resumeData') || '{}');
+        offlineData[title] = progressObj;
+        localStorage.setItem('resumeData', JSON.stringify(offlineData));
+      }
+    }
+  };
+
   document.getElementById('playerTitle').innerText=title;
   if(subs){ const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true; videoPlayer.appendChild(track); }
 }
