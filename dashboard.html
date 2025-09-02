@@ -235,20 +235,25 @@ async function loadMediaData(){
   } catch(e){ console.error('Failed to load media data:',e); mediaData={movies:[], shows:[]}; }
 }
 
-// HOME PAGE
-const moviesContainer=document.getElementById('moviesContainer');
-document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
-
+// HOME PAGE: Render Resume Watching with progress
 async function renderHome(search=''){
   moviesContainer.innerHTML='';
   const resumeContainer = document.getElementById('resumeContainer');
   resumeContainer.innerHTML='';
 
   // --- RESUME WATCHING ROW ---
-  const snapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
-  const resumeData = snapshot.val() || {};
-  const resumeKeys = Object.keys(resumeData).map(title=>({title,time:resumeData[title]})).filter(item=>item.time>0);
-  resumeKeys.sort((a,b)=>b.time-a.time);
+  let resumeData = {};
+  try {
+    const snapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
+    resumeData = snapshot.val() || {};
+  } catch {
+    resumeData = JSON.parse(localStorage.getItem('resumeData') || '{}');
+  }
+
+  const resumeKeys = Object.keys(resumeData)
+    .map(title => ({title, ...resumeData[title]}))
+    .filter(item => item.time > 0)
+    .sort((a,b)=>b.lastWatched - a.lastWatched); // Sort by last watched
 
   if(resumeKeys.length){
     const titleEl = document.createElement('h2');
@@ -259,14 +264,43 @@ async function renderHome(search=''){
     resumeKeys.forEach(item=>{
       let media = mediaData.movies.find(m=>m.title===item.title) || mediaData.shows.find(s=>s.title===item.title);
       if(!media) return;
-      const card=document.createElement('div'); card.className='movie-card';
-      card.innerHTML=`<img src="${media.img||''}"><div class="title">${item.title}</div>`;
-      card.addEventListener('click', ()=>{ if(media.src) openPlayer(item.title,media.src,media.subtitles); else openShow(media); });
+
+      const percent = Math.floor((item.time / (media.duration || 1)) * 100);
+      const card = document.createElement('div'); card.className='movie-card';
+      card.innerHTML = `
+        <img src="${media.img||''}">
+        <div class="title">${item.title}</div>
+        <div style="position:absolute;bottom:0;left:0;width:100%;height:6px;background:#333;border-radius:0 0 8px 8px;">
+          <div style="width:${percent}%;height:100%;background:#e50914;border-radius:0 0 8px 8px;"></div>
+        </div>
+      `;
+      card.addEventListener('click', ()=>{ 
+        if(media.src) openPlayer(item.title, media.src, media.subtitles);
+        else openShow(media); 
+      });
       row.appendChild(card);
     });
     resumeContainer.appendChild(row);
   }
 
+   // --- ORIGINAL HOME RENDER ---
+  [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
+    let filtered = arr || [];
+    if(label==='Movies'){ filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase()))); }
+    else { filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase())); }
+    if(filtered.length){
+      const titleEl=document.createElement('h2'); titleEl.innerText=label; moviesContainer.appendChild(titleEl);
+      const row=document.createElement('div'); row.className='row';
+      filtered.forEach(m=>{
+        const card=document.createElement('div'); card.className='movie-card';
+        card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+        card.addEventListener('click', ()=> label==='Movies'?openPlayer(m.title,m.src,m.subtitles):openShow(m));
+        row.appendChild(card);
+      });
+      moviesContainer.appendChild(row);
+    }
+  });
+}
   // --- ORIGINAL HOME RENDER ---
   [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
     let filtered = arr || [];
