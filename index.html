@@ -267,6 +267,17 @@ async function loadMediaData(){
 }
 
 // HOME PAGE
+
+// SHOW / EPISODES
+document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
+function openShow(show){
+  showPage('episodes'); 
+  document.getElementById('showTitle').innerText = show.title || 'Show';
+
+  const episodesContainer = document.getElementById('episodesContainer'); 
+  episodesContainer.innerHTML = '';
+
+  // HOME PAGE
 const moviesContainer=document.getElementById('moviesContainer');
 document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
 function renderHome(search=''){
@@ -294,16 +305,6 @@ function renderHome(search=''){
   });
   moviesContainer.appendChild(sRow);
 }
-
-// SHOW / EPISODES
-document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
-function openShow(show){
-  showPage('episodes'); 
-  document.getElementById('showTitle').innerText = show.title || 'Show';
-
-  const episodesContainer = document.getElementById('episodesContainer'); 
-  episodesContainer.innerHTML = '';
-
   // Season selector (if multiple)
   if(show.seasons?.length > 1){
     const seasonSelect = document.createElement('select');
