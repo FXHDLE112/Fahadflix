@@ -299,37 +299,60 @@ function renderHome(search=''){
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
 function openShow(show){
   showPage('episodes'); 
-  document.getElementById('showTitle').innerText=show.title||'Show';
-  const episodesContainer=document.getElementById('episodesContainer'); 
-  episodesContainer.innerHTML='';
-  if(show.seasons?.length>1){
-    const seasonSelect=document.createElement('select');
+  document.getElementById('showTitle').innerText = show.title || 'Show';
+
+  const episodesContainer = document.getElementById('episodesContainer'); 
+  episodesContainer.innerHTML = '';
+
+  // Season selector (if multiple)
+  if(show.seasons?.length > 1){
+    const seasonSelect = document.createElement('select');
     show.seasons.forEach((s,i)=>{ 
       const option=document.createElement('option'); 
       option.value=i; 
-      option.text='Season '+(s.season||i+1); 
+
+      // count available vs total
+      const total = (s.episodes||[]).length;
+      const available = (s.episodes||[]).filter(ep => ep.src).length;
+
+      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
       seasonSelect.appendChild(option); 
     });
     episodesContainer.appendChild(seasonSelect);
     seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
   }
+
   renderEpisodes(show,0);
 }
+
 function renderEpisodes(show,seasonIndex){
   const episodesContainer=document.getElementById('episodesContainer');
   const dropdown=episodesContainer.querySelector('select');
   episodesContainer.innerHTML=''; 
   if(dropdown) episodesContainer.appendChild(dropdown);
+
   const season=(show.seasons?.[seasonIndex])||{episodes:[]};
+
   (season.episodes||[]).forEach(ep=>{
     const epCard=document.createElement('div'); 
     epCard.className='episode-card'; 
-    epCard.innerText=ep.title||'Untitled';
-    epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+
+    if(!ep.src){
+      // Coming Soon
+      epCard.innerHTML = `
+        <strong>${ep.title || 'Untitled'}</strong>
+        <p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>
+      `;
+      epCard.style.opacity="0.6";
+      epCard.style.cursor="default";
+    } else {
+      epCard.innerText = ep.title || 'Untitled';
+      epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+    }
+
     episodesContainer.appendChild(epCard);
   });
 }
-
 // PLAYER
 const videoPlayer=document.getElementById('videoPlayer');
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
