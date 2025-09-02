@@ -268,6 +268,127 @@ async function loadMediaData(){
 
 // HOME PAGE
 
+  // --- RENDER HOME ---
+async function renderHome(search='') {
+  moviesContainer.innerHTML='';
+
+  // --- CONTINUE WATCHING ---
+  const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
+  const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
+  const continueWatching = [];
+
+  const allMedia = [...(mediaData.movies||[]), ...(mediaData.shows||[])];
+
+  allMedia.forEach(item => {
+    if(item.title && item.src && resumeData[item.title] && resumeData[item.title] > 0) {
+      continueWatching.push({
+        title: item.title,
+        img: item.img,
+        src: item.src,
+        subtitles: item.subtitles,
+        progress: resumeData[item.title],
+        duration: item.duration || 1 // fallback duration
+      });
+    }
+  });
+
+  if(continueWatching.length) {
+    const cwTitle = document.createElement('h2'); 
+    cwTitle.innerText = 'Continue Watching'; 
+    moviesContainer.appendChild(cwTitle);
+
+    const cwRow = document.createElement('div'); 
+    cwRow.className = 'row';
+
+    continueWatching.forEach(m => {
+      if(search && !m.title.toLowerCase().includes(search.toLowerCase())) return;
+
+      const progressPercent = (m.duration > 0 ? (m.progress / m.duration * 100) : 0);
+
+      const card = document.createElement('div'); 
+      card.className = 'movie-card';
+      card.innerHTML = `
+        <img src="${m.img||''}">
+        <div class="title">${m.title||'Untitled'}</div>
+        <div class="progress-bar" style="
+          position:absolute; bottom:0; left:0; height:6px; width:100%; background:rgba(255,255,255,0.2);
+        ">
+          <div style="width:${progressPercent}%; height:100%; background:#e50914;"></div>
+        </div>
+      `;
+      card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
+      cwRow.appendChild(card);
+    });
+
+    moviesContainer.appendChild(cwRow);
+  }
+
+  // --- MOVIES ---
+  const filteredMovies = (mediaData.movies||[]).filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase())));
+  if(filteredMovies.length) {
+    const mTitle = document.createElement('h2'); mTitle.innerText = 'Movies'; moviesContainer.appendChild(mTitle);
+
+    const mRow = document.createElement('div'); mRow.className = 'row';
+    filteredMovies.forEach(m => {
+      const card = document.createElement('div'); card.className = 'movie-card';
+      card.innerHTML = `<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+      card.addEventListener('click', ()=> openPlayer(m.title,m.src,m.subtitles));
+      mRow.appendChild(card);
+    });
+    moviesContainer.appendChild(mRow);
+  }
+
+  // --- SHOWS ---
+  const filteredShows = (mediaData.shows||[]).filter(s => s.src && (!search || s.title.toLowerCase().includes(search.toLowerCase())));
+  if(filteredShows.length) {
+    const sTitle = document.createElement('h2'); sTitle.innerText = 'Shows'; moviesContainer.appendChild(sTitle);
+
+    const sRow = document.createElement('div'); sRow.className = 'row';
+    filteredShows.forEach(s => {
+      const card = document.createElement('div'); card.className = 'movie-card';
+      card.innerHTML = `<img src="${s.img||''}"><div class="title">${s.title||'Untitled'}</div>`;
+      card.addEventListener('click', ()=> openShow(s));
+      sRow.appendChild(card);
+    });
+    moviesContainer.appendChild(sRow);
+  }
+}
+
+// --- OPEN PLAYER ---
+async function openPlayer(title, src, subs){
+  if(!src){ 
+    alert('Video source not available'); 
+    return; 
+  }
+
+  showPage('player'); 
+  videoPlayer.innerHTML=''; 
+  videoPlayer.src=src;
+
+  // Resume playback if exists
+  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+
+  // Save progress
+  videoPlayer.ontimeupdate = ()=>{ 
+    if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
+  };
+
+  // Load subtitles if provided
+  videoPlayer.innerHTML = ''; // clear previous tracks
+  if(subs){ 
+    const track = document.createElement('track'); 
+    track.src = subs; 
+    track.kind = 'subtitles'; 
+    track.srclang = 'en'; 
+    track.label = 'English'; 
+    videoPlayer.appendChild(track); 
+  }
+
+  videoPlayer.play().catch(()=>{});
+}
+
+
 // SHOW / EPISODES
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
 function openShow(show){
