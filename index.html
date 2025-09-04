@@ -142,14 +142,7 @@ const auth=firebase.auth(), db=firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
 
 // PAGES
-const pages={
-  auth: document.getElementById('authPage'),
-  profiles: document.getElementById('profilesPage'),
-  home: document.getElementById('homePage'),
-  episodes: document.getElementById('episodesPage'),
-  player: document.getElementById('playerPage'),
-  admin: document.getElementById('adminPage')
-};
+const pages={ auth: document.getElementById('authPage'), profiles: document.getElementById('profilesPage'), home: document.getElementById('homePage'), episodes: document.getElementById('episodesPage'), player: document.getElementById('playerPage'), admin: document.getElementById('adminPage') };
 function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
 
 // AUTH
@@ -210,7 +203,6 @@ function renderProfiles(){
     div.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
       <button class="btn ghost editBtn">Edit</button>
       <button class="btn ghost deleteBtn">Delete</button>`;
-
     div.querySelector('img').addEventListener('click', async ()=>{
       showPage('home');
       document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
@@ -218,14 +210,8 @@ function renderProfiles(){
       await loadMediaData();
       renderHome();
     });
-
-    div.querySelector('.editBtn').addEventListener('click', ()=>{
-      const newName=prompt('Edit profile name:',p.name);
-      if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); }
-    });
-    div.querySelector('.deleteBtn').addEventListener('click', async ()=>{
-      profiles.splice(index,1); await saveProfiles(); renderProfiles();
-    });
+    div.querySelector('.editBtn').addEventListener('click', ()=>{ const newName=prompt('Edit profile name:',p.name); if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); } });
+    div.querySelector('.deleteBtn').addEventListener('click', async ()=>{ profiles.splice(index,1); await saveProfiles(); renderProfiles(); });
     profilesContainer.appendChild(div);
   });
 }
@@ -234,10 +220,7 @@ function renderProfiles(){
 document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
-document.getElementById('adminToggleBtn').addEventListener('click', ()=> showPage('admin'));
-document.getElementById('adminToggleBtn').addEventListener('click', ()=>{
-  if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); }
-});
+document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
 
 // LOAD MEDIA
 async function loadMediaData(){
@@ -252,21 +235,44 @@ async function loadMediaData(){
   }
 }
 
-// HOME PAGE
+// HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
 document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
 
 async function renderHome(search=''){
   moviesContainer.innerHTML='';
+
+  // Resume Watching Row
+  const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
+  const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
+  const resumeKeys = Object.keys(resumeData);
+  if(resumeKeys.length){
+    const titleEl = document.createElement('h2');
+    titleEl.innerText = 'Resume Watching';
+    moviesContainer.appendChild(titleEl);
+
+    const row = document.createElement('div'); 
+    row.className = 'row';
+
+    resumeKeys.forEach(key=>{
+      let mediaItem = mediaData.movies.find(m => m.title===key) || mediaData.shows.find(s => s.title===key);
+      if(mediaItem){
+        const card = document.createElement('div'); card.className='movie-card';
+        card.innerHTML = `<img src="${mediaItem.img||''}"><div class="title">${mediaItem.title}</div>`;
+        card.addEventListener('click', ()=> { if(mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); else openShow(mediaItem); });
+        row.appendChild(card);
+      }
+    });
+    moviesContainer.appendChild(row);
+  }
+
+  // Regular Movies / Shows
   [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
     let filtered = arr || [];
-    if(label==='Movies'){
-      filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase())));
-    } else { // Shows: ignore missing top-level src
-      filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase()));
-    }
+    if(label==='Movies'){ filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase()))); } 
+    else { filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase())); }
     if(filtered.length){
-      const titleEl=document.createElement('h2'); titleEl.innerText=label; moviesContainer.appendChild(titleEl);
+      const titleEl=document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
       const row=document.createElement('div'); row.className='row';
       filtered.forEach(m=>{
         const card=document.createElement('div'); card.className='movie-card';
@@ -314,8 +320,7 @@ function renderEpisodes(show,seasonIndex){
     epCard.className='episode-card'; 
     if(!ep.src){
       epCard.innerHTML = `<strong>${ep.title || 'Untitled'}</strong><p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>`;
-      epCard.style.opacity="0.6";
-      epCard.style.cursor="default";
+      epCard.style.opacity="0.6"; epCard.style.cursor="default";
     } else {
       epCard.innerText = ep.title || 'Untitled';
       epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
