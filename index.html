@@ -1,189 +1,282 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>FahadFlix</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-/* --- same CSS as before --- */
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
-body{background:#141414;color:#fff;min-height:100vh}
-.container{max-width:1100px;margin:18px auto;padding:12px}
-.auth-box{max-width:420px;margin:60px auto;padding:20px;background:#1f1f1f;border-radius:10px;text-align:center}
-.auth-box input,.auth-box button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
-.auth-box input{background:#333;color:#fff}
-.auth-box button{background:#e50914;color:#fff;font-weight:700;cursor:pointer}
-.page{display:none}
-.active{display:block}
-h1,h2{margin:14px 0;text-align:center}
-#profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px}
-.profile-card{width:140px;text-align:center;background:#1b1b1b;padding:8px;border-radius:10px;position:relative}
-.profile-card img{width:120px;height:120px;object-fit:cover;border-radius:12px;cursor:pointer}
-.profile-card p{margin:6px 0}
-.profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px}
-.btn{padding:8px 12px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3)}
-.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
-.add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
-.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
-#moviesContainer{display:flex;flex-direction:column;gap:20px;padding:12px}
-.row{display:flex;gap:12px;overflow-x:auto}
-.movie-card{background:#1d1d1d;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-width:160px}
-.movie-card img{width:100%;display:block;height:240px;object-fit:cover;transition:transform .25s}
-.movie-card:hover img{transform:scale(1.05)}
-.movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.55);padding:6px 8px;border-radius:6px}
-.episode-card{background:#1f1f1f;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:8px}
-#player{margin:20px auto;text-align:center}
-video{width:95%;max-width:980px;border-radius:8px;background:#000}
-.controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
-#searchInput{width:100%;padding:10px;margin:12px 0;border-radius:6px;border:none;background:#222;color:#fff}
-@media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
-</style>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>FahadFlix</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body{background:#141414;color:#fff;min-height:100vh}
+    header{background:#000;padding:10px;display:flex;justify-content:space-between;align-items:center}
+    header h1{color:#e50914}
+    button{background:#e50914;border:none;color:#fff;padding:6px 12px;border-radius:4px;cursor:pointer}
+    .container{padding:20px}
+    h2{margin:15px 0}
+    .row{display:flex;overflow-x:auto;gap:10px}
+    .movie-card{min-width:150px;flex:0 0 auto;cursor:pointer}
+    .movie-card img{width:100%;border-radius:6px}
+    .title{text-align:center;font-size:14px;margin-top:4px}
+    #player{width:100%;max-height:70vh;background:#000}
+    #loginPage,#profilesPage,#homePage,#playerPage,#episodesPage,#adminPage{display:none}
+    .profile-card{display:inline-block;margin:10px;text-align:center;cursor:pointer}
+    .profile-card img{width:100px;border-radius:50%}
+  </style>
 </head>
 <body>
-<div class="container">
-
-<!-- AUTH PAGE -->
-<div id="authPage" class="page active">
-  <div class="auth-box">
-    <h2>Login or Sign Up</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="signInBtn">Sign In</button>
-    <button id="signUpBtn" class="btn ghost">Sign Up</button>
-  </div>
-</div>
-
-<!-- PROFILES PAGE -->
-<div id="profilesPage" class="page">
-  <h1>Who's watching?</h1>
-  <div class="add-area">
-    <input id="newProfileName" type="text" placeholder="New profile name">
-    <input id="newProfileImage" type="file" accept="image/*">
-    <button id="addProfileBtn">Add</button>
-  </div>
-  <div id="profilesContainer"></div>
-  <div style="text-align:center;margin-top:12px">
-    <button id="signOutBtn" class="btn ghost">Sign Out</button>
-  </div>
-</div>
-
-<!-- HOME PAGE -->
-<div id="homePage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h1 id="welcomeTitle">Browse</h1>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="switchProfileBtn" class="btn ghost">Switch Profile</button>
-      <button id="logoutBtn" class="btn">Logout</button>
-      <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
+  <header>
+    <h1>FahadFlix</h1>
+    <div>
+      <button id="homeBtn">Home</button>
+      <button id="adminToggleBtn" style="display:none">Admin</button>
+      <button id="logoutBtn">Logout</button>
     </div>
-  </div>
-  <input id="searchInput" type="text" placeholder="Search movies or shows...">
-  <div id="moviesContainer"></div>
-</div>
+  </header>
 
-<!-- EPISODES PAGE -->
-<div id="episodesPage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h1 id="showTitle">Show</h1>
-    <button id="backToHome" class="btn ghost">Back</button>
+  <div id="loginPage" class="container">
+    <h2>Login</h2>
+    <input id="email" placeholder="Email"><br><br>
+    <input id="password" type="password" placeholder="Password"><br><br>
+    <button id="loginBtn">Login</button>
+    <button id="signupBtn">Sign Up</button>
   </div>
-  <div id="episodesContainer"></div>
-</div>
 
-<!-- PLAYER PAGE -->
-<div id="playerPage" class="page">
-  <h1 id="playerTitle">Player</h1>
-  <div id="player">
-    <video id="videoPlayer" controls crossorigin="anonymous"></video>
+  <div id="profilesPage" class="container">
+    <h2>Select Profile</h2>
+    <div id="profilesContainer"></div>
+    <input id="newProfileName" placeholder="New profile name">
+    <button id="addProfileBtn">Add Profile</button>
   </div>
-  <div class="controls">
-    <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
-    <button class="btn ghost" id="playerBackBtn">Back</button>
-  </div>
-</div>
 
-<!-- ADMIN PAGE -->
-<div id="adminPage" class="page">
-  <h1>Admin Panel</h1>
-  <div class="add-area">
-    <input id="adminTitle" type="text" placeholder="Title">
-    <input id="adminImg" type="text" placeholder="Image URL">
-    <input id="adminSrc" type="text" placeholder="Video URL">
-    <input id="adminSubs" type="text" placeholder="Subtitles URL (optional)">
+  <div id="homePage" class="container">
+    <input id="search" placeholder="Search...">
+    <div id="moviesContainer"></div>
+  </div>
+
+  <div id="episodesPage" class="container">
+    <button id="backToHome">Back</button>
+    <h2 id="showTitle"></h2>
+    <div id="episodesContainer"></div>
+  </div>
+
+  <div id="playerPage" class="container">
+    <button id="playerBackBtn">Back</button>
+    <h2 id="playerTitle"></h2>
+    <video id="videoPlayer" controls></video><br>
+    <button id="toggleSubsBtn">Toggle Subtitles</button>
+  </div>
+
+  <div id="adminPage" class="container">
+    <h2>Admin Panel</h2>
+    <input id="adminTitle" placeholder="Title"><br>
+    <input id="adminImg" placeholder="Image URL"><br>
+    <input id="adminSrc" placeholder="Video URL (for movies)"><br>
+    <input id="adminSubs" placeholder="Subtitles URL (optional)"><br>
     <select id="adminType">
       <option value="movies">Movie</option>
       <option value="shows">Show</option>
-    </select>
-    <button id="addMediaBtn">Add Media</button>
+    </select><br>
+    <button id="addMediaBtn">Add</button>
   </div>
-  <div id="adminList"></div>
-  <button id="saveToGithubBtn" class="btn">Save Changes to GitHub</button>
-  <button onclick="showPage('home')" class="btn ghost">Back</button>
-</div>
 
-</div>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    // ✅ Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+      authDomain: "fahadflix-storage.firebaseapp.com",
+      databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "fahadflix-storage",
+      storageBucket: "fahadflix-storage.appspot.com",
+      messagingSenderId: "1064833913945",
+      appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-<script>
-// --- Firebase init (same as before) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
-  authDomain: "fahadflix-storage.firebaseapp.com",
-  databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "fahadflix-storage",
-  storageBucket: "fahadflix-storage.appspot.com",
-  messagingSenderId: "1064833913945",
-  appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
-};
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database();
-let currentUser=null, profiles=[], mediaData={movies:[],shows:[]};
+    const auth=firebase.auth();
+    const db=firebase.database();
 
-// pages setup
-const pages={auth:authPage,profiles:profilesPage,home:homePage,episodes:episodesPage,player:playerPage,admin:adminPage};
-function showPage(name){
-  Object.values(pages).forEach(el=>el.classList.remove('active'));
-  pages[name].classList.add('active');
-  // auto-pause video if leaving player
-  if(name!=='player'){ videoPlayer.pause(); }
-}
+    let currentUser=null;
+    let activeProfile=null;
+    let mediaData={movies:[],shows:[]};
 
-/* --- auth, profiles, media load functions same as your version --- */
+    const loginPage=document.getElementById('loginPage');
+    const profilesPage=document.getElementById('profilesPage');
+    const homePage=document.getElementById('homePage');
+    const playerPage=document.getElementById('playerPage');
+    const episodesPage=document.getElementById('episodesPage');
+    const adminPage=document.getElementById('adminPage');
+    const moviesContainer=document.getElementById('moviesContainer');
+    const videoPlayer=document.getElementById('videoPlayer');
 
-/* --- renderHome same with Resume Watching --- */
+    function showPage(id){
+      [loginPage,profilesPage,homePage,playerPage,episodesPage,adminPage]
+        .forEach(p=>p.style.display='none');
+      document.getElementById(id+'Page').style.display='block';
+      // ✅ Pause video globally when leaving player
+      if(id!=='player') videoPlayer.pause();
+    }
 
-/* --- openShow and renderEpisodes same --- */
+    // AUTH
+    document.getElementById('loginBtn').onclick=()=>auth.signInWithEmailAndPassword(
+      document.getElementById('email').value,
+      document.getElementById('password').value
+    ).catch(e=>alert(e.message));
 
-// PLAYER
-const videoPlayer=document.getElementById('videoPlayer');
-document.getElementById('playerBackBtn').addEventListener('click', ()=>{
-  videoPlayer.pause();
-  showPage('home');
-});
-document.getElementById('backToHome').addEventListener('click', ()=>{
-  videoPlayer.pause();
-  showPage('home');
-});
-document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
-  const tracks=videoPlayer.textTracks||[];
-  for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
-});
-async function openPlayer(title,src,subs){
-  showPage('player');
-  videoPlayer.innerHTML='';
-  videoPlayer.src=src||'';
-  const snapshot=await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-  if(snapshot.exists()) videoPlayer.currentTime=snapshot.val();
-  videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
-  document.getElementById('playerTitle').innerText=title;
-  if(subs){
-    const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
-    videoPlayer.appendChild(track);
-  }
-}
-</script>
+    document.getElementById('signupBtn').onclick=()=>auth.createUserWithEmailAndPassword(
+      document.getElementById('email').value,
+      document.getElementById('password').value
+    ).catch(e=>alert(e.message));
+
+    document.getElementById('logoutBtn').onclick=()=>auth.signOut();
+
+    auth.onAuthStateChanged(u=>{
+      if(u){ currentUser=u; loadProfiles(); }
+      else{ currentUser=null; showPage('login'); }
+    });
+
+    // PROFILES
+    function loadProfiles(){
+      db.ref('profiles/'+currentUser.uid).once('value').then(snap=>{
+        const data=snap.val()||{}; const c=document.getElementById('profilesContainer');
+        c.innerHTML=''; Object.values(data).forEach(p=>{
+          const card=document.createElement('div'); card.className='profile-card';
+          card.innerHTML=`<img src="https://placehold.co/100"><div>${p.name}</div>`;
+          card.onclick=()=>{activeProfile=p; loadMedia();};
+          c.appendChild(card);
+        });
+        showPage('profiles');
+      });
+    }
+    document.getElementById('addProfileBtn').onclick=()=>{
+      const name=document.getElementById('newProfileName').value.trim();
+      if(!name) return;
+      const ref=db.ref('profiles/'+currentUser.uid).push({name});
+      loadProfiles();
+    };
+
+    // HOME
+    function loadMedia(){
+      db.ref('media').once('value').then(snap=>{
+        mediaData=snap.val()||{movies:[],shows:[]};
+        renderHome();
+        showPage('home');
+      });
+    }
+
+    async function renderHome(search=''){
+      moviesContainer.innerHTML='';
+
+      // ✅ Resume Watching row (per profile)
+      const resumeSnap=await db.ref(`resume/${currentUser.uid}/${activeProfile.name}`).once('value');
+      const resumeData=resumeSnap.val()||{};
+      const resumeKeys=Object.keys(resumeData);
+      if(resumeKeys.length){
+        const titleEl=document.createElement('h2'); titleEl.innerText='Resume Watching';
+        moviesContainer.appendChild(titleEl);
+        const row=document.createElement('div'); row.className='row';
+        resumeKeys.forEach(key=>{
+          let item=mediaData.movies.find(m=>m.title===key) || mediaData.shows.find(s=>s.title===key);
+          if(item){
+            const card=document.createElement('div'); card.className='movie-card';
+            card.innerHTML=`<img src="${item.img||''}"><div class="title">${item.title}</div>`;
+            card.onclick=()=> item.src ? openPlayer(item.title,item.src,item.subtitles) : openShow(item);
+            row.appendChild(card);
+          }
+        });
+        moviesContainer.appendChild(row);
+      }
+
+      // Movies / Shows
+      [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label,arr])=>{
+        let filtered=arr||[];
+        if(label==='Movies'){
+          filtered=filtered.filter(m=>m.src && (!search||m.title.toLowerCase().includes(search.toLowerCase())));
+        } else {
+          filtered=filtered.filter(m=>!search||m.title.toLowerCase().includes(search.toLowerCase()));
+        }
+        if(filtered.length){
+          const titleEl=document.createElement('h2'); titleEl.innerText=label;
+          moviesContainer.appendChild(titleEl);
+          const row=document.createElement('div'); row.className='row';
+          filtered.forEach(m=>{
+            const card=document.createElement('div'); card.className='movie-card';
+            card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+            card.onclick=()=> label==='Movies' ? openPlayer(m.title,m.src,m.subtitles) : openShow(m);
+            row.appendChild(card);
+          });
+          moviesContainer.appendChild(row);
+        }
+      });
+    }
+
+    document.getElementById('search').oninput=(e)=>renderHome(e.target.value);
+
+    // SHOW EPISODES
+    function openShow(show){
+      showPage('episodes');
+      document.getElementById('showTitle').innerText=show.title;
+      const c=document.getElementById('episodesContainer'); c.innerHTML='';
+      (show.episodes||[]).forEach(ep=>{
+        const div=document.createElement('div');
+        div.className='movie-card';
+        div.innerHTML=`<img src="${ep.img||''}"><div class="title">${ep.title}</div>`;
+        div.onclick=()=>openPlayer(show.title+' - '+ep.title,ep.src,ep.subtitles);
+        c.appendChild(div);
+      });
+    }
+
+    // PLAYER
+    document.getElementById('playerBackBtn').onclick=()=>showPage('home');
+    document.getElementById('backToHome').onclick=()=>showPage('home');
+    document.getElementById('toggleSubsBtn').onclick=()=>{
+      const tracks=videoPlayer.textTracks||[];
+      for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
+    };
+
+    async function openPlayer(title,src,subs){
+      showPage('player');
+      videoPlayer.innerHTML='';
+      videoPlayer.src=src||'';
+      const snapshot=await db.ref(`resume/${currentUser.uid}/${activeProfile.name}/${title}`).once('value');
+      if(snapshot.exists()) videoPlayer.currentTime=snapshot.val();
+      videoPlayer.ontimeupdate=()=>{
+        if(!videoPlayer.paused){
+          db.ref(`resume/${currentUser.uid}/${activeProfile.name}/${title}`).set(videoPlayer.currentTime);
+        }
+      };
+      document.getElementById('playerTitle').innerText=title;
+      if(subs){
+        const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
+        videoPlayer.appendChild(track);
+      }
+    }
+
+    // ADMIN
+    document.getElementById('addMediaBtn').onclick=()=>{
+      const t=document.getElementById('adminTitle').value.trim();
+      const img=document.getElementById('adminImg').value.trim();
+      const src=document.getElementById('adminSrc').value.trim();
+      const subs=document.getElementById('adminSubs').value.trim();
+      const type=document.getElementById('adminType').value;
+      if(!t||!img||(!src && type==='movies')){ alert('Fill required fields'); return; }
+      const obj={title:t,img,src,subtitles:subs};
+      mediaData[type].push(obj);
+      db.ref('media').set(mediaData);
+      alert(type+' added!');
+      renderHome();
+    };
+
+    document.getElementById('homeBtn').onclick=()=>showPage('home');
+    document.getElementById('adminToggleBtn').onclick=()=>showPage('admin');
+
+    // Only show admin if email matches
+    auth.onAuthStateChanged(u=>{
+      if(u?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
+      else document.getElementById('adminToggleBtn').style.display='none';
+    });
+  </script>
 </body>
 </html>
