@@ -110,8 +110,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
     <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
     <button class="btn ghost" id="playerBackBtn">Back</button>
   </div>
-
-  <!-- REVIEWS SECTION -->
+  <!-- Reviews Section -->
   <div class="review-section">
     <h2>Reviews & Ratings</h2>
     <div id="averageRating"></div>
@@ -316,4 +315,112 @@ document.getElementById('backToHome').addEventListener('click', ()=> showPage('h
 function openShow(show){
   showPage('episodes'); 
   document.getElementById('showTitle').innerText = show.title || 'Show';
-  const episodesContainer = document.getElementById('episodes
+  const episodesContainer = document.getElementById('episodesContainer'); 
+  episodesContainer.innerHTML = '';
+
+  if(show.seasons?.length > 1){
+    const seasonSelect = document.createElement('select');
+    show.seasons.forEach((s,i)=>{ 
+      const total = (s.episodes||[]).length;
+      const available = (s.episodes||[]).filter(ep => ep.src).length;
+      const option=document.createElement('option'); 
+      option.value=i; 
+      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
+      seasonSelect.appendChild(option); 
+    });
+    episodesContainer.appendChild(seasonSelect);
+    seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
+  }
+  renderEpisodes(show,0);
+}
+
+function renderEpisodes(show,seasonIndex){
+  const episodesContainer=document.getElementById('episodesContainer');
+  const dropdown=episodesContainer.querySelector('select');
+  episodesContainer.innerHTML=''; 
+  if(dropdown) episodesContainer.appendChild(dropdown);
+  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
+  (season.episodes||[]).forEach(ep=>{
+    const epCard=document.createElement('div'); 
+    epCard.className='episode-card'; 
+    if(!ep.src){
+      epCard.innerHTML = `<strong>${ep.title || 'Untitled'}</strong><p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>`;
+      epCard.style.opacity="0.6"; epCard.style.cursor="default";
+    } else {
+      epCard.innerText = ep.title || 'Untitled';
+      epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+    }
+    episodesContainer.appendChild(epCard);
+  });
+}
+
+// PLAYER
+const videoPlayer=document.getElementById('videoPlayer');
+document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
+document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
+  const tracks=videoPlayer.textTracks||[]; 
+  for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
+});
+async function openPlayer(title,src,subs){
+  showPage('player'); 
+  videoPlayer.innerHTML=''; 
+  videoPlayer.src=src||'';
+  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+  videoPlayer.ontimeupdate=()=>{ if(!videoPlayer.paused) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); };
+  document.getElementById('playerTitle').innerText=title;
+  if(subs){
+    const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
+    videoPlayer.appendChild(track);
+  }
+  loadReviews(title); // load reviews for this title
+}
+
+// REVIEWS
+async function loadReviews(title){
+  const snapshot = await db.ref(`reviews/${title}`).once('value');
+  const reviewsData = snapshot.exists() ? snapshot.val() : {};
+  const reviewsList=document.getElementById('reviewsList');
+  const avgRatingEl=document.getElementById('averageRating');
+  reviewsList.innerHTML='';
+  
+  let total=0, count=0;
+  Object.values(reviewsData).forEach(r=>{
+    total+=r.rating; count++;
+    const div=document.createElement('div'); div.className='review-item';
+    div.innerHTML=`<div class="review-rating">${'⭐'.repeat(r.rating)}</div>
+                   <p>${r.text||''}</p>
+                   <small>by ${r.userEmail||'Anonymous'}</small>`;
+    reviewsList.appendChild(div);
+  });
+  
+  if(count) avgRatingEl.innerHTML=`Average Rating: ${(total/count).toFixed(1)} ⭐ (${count} reviews)`;
+  else avgRatingEl.innerHTML="No reviews yet. Be the first!";
+}
+
+document.getElementById('submitReviewBtn').addEventListener('click', async ()=>{
+  if(!currentUser) return alert("Login required to review.");
+  const rating=parseInt(document.getElementById('reviewRating').value);
+  const text=document.getElementById('reviewText').value.trim();
+  const title=document.getElementById('playerTitle').innerText;
+  await db.ref(`reviews/${title}/${currentUser.uid}`).set({rating,text,userEmail:currentUser.email});
+  document.getElementById('reviewText').value='';
+  loadReviews(title);
+});
+
+// ADMIN
+document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
+  const t=document.getElementById('adminTitle').value.trim();
+  const img=document.getElementById('adminImg').value.trim();
+  const src=document.getElementById('adminSrc').value.trim();
+  const subs=document.getElementById('adminSubs').value.trim();
+  const type=document.getElementById('adminType').value;
+  if(!t||!img||(!src && type==='movies')){ alert('Fill required fields'); return; }
+  const obj={title:t,img,src,subtitles:subs};
+  mediaData[type].push(obj);
+  alert(type+' added!');
+  renderHome();
+});
+</script>
+</body>
+</html>
