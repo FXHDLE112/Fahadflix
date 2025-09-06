@@ -1,290 +1,293 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>FahadFlix</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
-body{background:#141414;color:#fff;min-height:100vh}
-.container{max-width:1100px;margin:18px auto;padding:12px}
-.auth-box{max-width:420px;margin:60px auto;padding:20px;background:#1f1f1f;border-radius:10px;text-align:center}
-.auth-box input,.auth-box button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
-.auth-box input{background:#333;color:#fff}
-.auth-box button{background:#e50914;color:#fff;font-weight:700;cursor:pointer}
-.page{display:none}
-.active{display:block}
-h1,h2{margin:14px 0;text-align:center}
-#profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px}
-.profile-card{width:140px;text-align:center;background:#1b1b1b;padding:8px;border-radius:10px;position:relative}
-.profile-card img{width:120px;height:120px;object-fit:cover;border-radius:12px;cursor:pointer}
-.profile-card p{margin:6px 0}
-.profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px}
-.btn{padding:8px 12px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3)}
-.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
-.add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
-.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
-#moviesContainer{display:flex;flex-direction:column;gap:20px;padding:12px}
-.row{display:flex;gap:12px;overflow-x:auto}
-.movie-card{background:#1d1d1d;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-width:160px}
-.movie-card img{width:100%;display:block;height:240px;object-fit:cover;transition:transform .25s}
-.movie-card:hover img{transform:scale(1.05)}
-.movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.55);padding:6px 8px;border-radius:6px}
-.episode-card{background:#1f1f1f;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:8px}
-#player{margin:20px auto;text-align:center}
-video{width:95%;max-width:980px;border-radius:8px;background:#000}
-.controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
-#searchInput{width:100%;padding:10px;margin:12px 0;border-radius:6px;border:none;background:#222;color:#fff}
-.review-section{margin-top:20px;padding:12px;background:#1b1b1b;border-radius:8px}
-.review-form{margin-bottom:14px}
-.review-form textarea{width:100%;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;margin-top:6px}
-.review-form select,.review-form button{padding:8px;border-radius:6px;border:none;margin-top:8px}
-.review-item{padding:8px;border-bottom:1px solid #333}
-.review-item:last-child{border-bottom:none}
-.review-rating{color:gold}
-@media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
-</style>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>FahadFlix</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body{background:#141414;color:#fff;min-height:100vh}
+    .container{max-width:1100px;margin:18px auto;padding:12px}
+    .auth-box{max-width:420px;margin:60px auto;padding:20px;background:#1f1f1f;border-radius:10px;text-align:center}
+    .auth-box input,.auth-box button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
+    .auth-box input{background:#333;color:#fff}
+    .auth-box button{background:#e50914;color:#fff;font-weight:700;cursor:pointer}
+    .page{display:none}
+    .active{display:block}
+    h1,h2{margin:14px 0;text-align:center}
+    #profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px}
+    .profile-card{width:140px;text-align:center;background:#1b1b1b;padding:8px;border-radius:10px;position:relative}
+    .profile-card img{width:120px;height:120px;object-fit:cover;border-radius:12px;cursor:pointer}
+    .profile-card p{margin:6px 0}
+    .profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px}
+    .btn{padding:8px 12px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3)}
+    .add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
+    .add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
+    .add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
+    #moviesContainer{display:flex;flex-direction:column;gap:20px;padding:12px}
+    .row{display:flex;gap:12px;overflow-x:auto}
+    .movie-card{background:#1d1d1d;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-width:160px}
+    .movie-card img{width:100%;display:block;height:240px;object-fit:cover;transition:transform .25s}
+    .movie-card:hover img{transform:scale(1.05)}
+    .movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.55);padding:6px 8px;border-radius:6px}
+    .episode-card{background:#1f1f1f;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:8px}
+    #player{margin:20px auto;text-align:center}
+    video{width:95%;max-width:980px;border-radius:8px;background:#000}
+    .controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    #searchInput{width:100%;padding:10px;margin:12px 0;border-radius:6px;border:none;background:#222;color:#fff}
+    .review-section{margin-top:20px;padding:12px;background:#1b1b1b;border-radius:8px}
+    .review-form{margin-bottom:14px}
+    .review-form textarea{width:100%;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;margin-top:6px}
+    .review-form select,.review-form button{padding:8px;border-radius:6px;border:none;margin-top:8px}
+    .review-item{padding:8px;border-bottom:1px solid #333}
+    .review-item:last-child{border-bottom:none}
+    .review-rating{color:gold}
+    @media(max-width:600px){
+      .add-area{flex-direction:column;align-items:stretch}
+      .movie-card img{height:180px}
+      .profile-card img{width:100px;height:100px}
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
 </head>
 <body>
 <div class="container">
 
-<!-- AUTH PAGE -->
-<div id="authPage" class="page active">
-  <div class="auth-box">
-    <h2>Login or Sign Up</h2>
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="signInBtn">Sign In</button>
-    <button id="signUpBtn" class="btn ghost">Sign Up</button>
-  </div>
-</div>
-
-<!-- PROFILES PAGE -->
-<div id="profilesPage" class="page">
-  <h1>Who's watching?</h1>
-  <div class="add-area">
-    <input id="newProfileName" type="text" placeholder="New profile name">
-    <input id="newProfileImage" type="file" accept="image/*">
-    <button id="addProfileBtn">Add</button>
-  </div>
-  <div id="profilesContainer"></div>
-  <div style="text-align:center;margin-top:12px">
-    <button id="signOutBtn" class="btn ghost">Sign Out</button>
-  </div>
-</div>
-
-<!-- HOME PAGE -->
-<div id="homePage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h1 id="welcomeTitle">Browse</h1>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button id="switchProfileBtn" class="btn ghost">Switch Profile</button>
-      <button id="logoutBtn" class="btn">Logout</button>
-      <button id="watchPartyBtn" class="btn ghost">Watch Party</button>
-      <button id="forumBtn" class="btn ghost">Forums</button>
-      <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
+  <!-- AUTH PAGE -->
+  <div id="authPage" class="page active">
+    <div class="auth-box">
+      <h2>Login or Sign Up</h2>
+      <input id="email" type="email" placeholder="Email">
+      <input id="password" type="password" placeholder="Password">
+      <button id="signInBtn">Sign In</button>
+      <button id="signUpBtn" class="btn ghost">Sign Up</button>
     </div>
   </div>
-  <input id="searchInput" type="text" placeholder="Search movies or shows...">
-  <div id="moviesContainer"></div>
-</div>
 
-<!-- EPISODES PAGE -->
-<div id="episodesPage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h1 id="showTitle">Show</h1>
-    <button id="backToHome" class="btn ghost">Back</button>
+  <!-- PROFILES PAGE -->
+  <div id="profilesPage" class="page">
+    <h1>Who's watching?</h1>
+    <div class="add-area">
+      <input id="newProfileName" type="text" placeholder="New profile name">
+      <input id="newProfileImage" type="file" accept="image/*">
+      <button id="addProfileBtn">Add</button>
+    </div>
+    <div id="profilesContainer"></div>
+    <div style="text-align:center;margin-top:12px">
+      <button id="signOutBtn" class="btn ghost">Sign Out</button>
+    </div>
   </div>
-  <div id="episodesContainer"></div>
-</div>
 
-<!-- PLAYER PAGE -->
-<div id="playerPage" class="page">
-  <h1 id="playerTitle">Player</h1>
-  <div id="player">
-    <video id="videoPlayer" controls crossorigin="anonymous"></video>
+  <!-- HOME PAGE -->
+  <div id="homePage" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1 id="welcomeTitle">Browse</h1>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="switchProfileBtn" class="btn ghost">Switch Profile</button>
+        <button id="logoutBtn" class="btn">Logout</button>
+        <button id="watchPartyBtn" class="btn ghost">Watch Party</button>
+        <button id="forumBtn" class="btn ghost">Forums</button>
+        <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
+      </div>
+    </div>
+    <input id="searchInput" type="text" placeholder="Search movies or shows...">
+    <div id="moviesContainer"></div>
   </div>
-  <div class="controls">
-    <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
-    <button class="btn ghost" id="playerBackBtn">Back</button>
+
+  <!-- EPISODES PAGE -->
+  <div id="episodesPage" class="page">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h1 id="showTitle">Show</h1>
+      <button id="backToHome" class="btn ghost">Back</button>
+    </div>
+    <div id="episodesContainer"></div>
   </div>
-  <!-- Reviews Section -->
-  <div class="review-section">
-    <h2>Reviews & Ratings</h2>
-    <div id="averageRating"></div>
-    <div class="review-form">
-      <label>Rate this:</label>
-      <select id="reviewRating">
-        <option value="5">⭐⭐⭐⭐⭐</option>
-        <option value="4">⭐⭐⭐⭐</option>
-        <option value="3">⭐⭐⭐</option>
-        <option value="2">⭐⭐</option>
-        <option value="1">⭐</option>
+
+  <!-- PLAYER PAGE -->
+  <div id="playerPage" class="page">
+    <h1 id="playerTitle">Player</h1>
+    <div id="player">
+      <video id="videoPlayer" controls crossorigin="anonymous"></video>
+    </div>
+    <div class="controls">
+      <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
+      <button class="btn ghost" id="playerBackBtn">Back</button>
+    </div>
+    <!-- Reviews Section -->
+    <div class="review-section">
+      <h2>Reviews & Ratings</h2>
+      <div id="averageRating"></div>
+      <div class="review-form">
+        <label>Rate this:</label>
+        <select id="reviewRating">
+          <option value="5">⭐⭐⭐⭐⭐</option>
+          <option value="4">⭐⭐⭐⭐</option>
+          <option value="3">⭐⭐⭐</option>
+          <option value="2">⭐⭐</option>
+          <option value="1">⭐</option>
+        </select>
+        <textarea id="reviewText" placeholder="Write your review..."></textarea>
+        <button id="submitReviewBtn" class="btn">Submit Review</button>
+      </div>
+      <div id="reviewsList"></div>
+    </div>
+  </div>
+
+  <!-- WATCH PARTY PAGE -->
+  <div id="watchPartyPage" class="page">
+    <h1>🎉 Watch Party</h1>
+    <div style="margin:12px 0">
+      <button id="createPartyBtn" class="btn">Create Party</button>
+      <input id="joinPartyCode" type="text" placeholder="Enter Party Code">
+      <button id="joinPartyBtn" class="btn ghost">Join Party</button>
+    </div>
+    <div id="partyInfo"></div>
+    <div id="partyChat" style="margin-top:20px;background:#1f1f1f;padding:10px;border-radius:8px;max-height:200px;overflow-y:auto"></div>
+    <input id="partyMsg" type="text" placeholder="Type a message...">
+    <button id="sendPartyMsg" class="btn">Send</button>
+    <button onclick="showPage('home')" class="btn ghost" style="margin-top:12px">Back</button>
+  </div>
+
+  <!-- FORUM PAGE -->
+  <div id="forumPage" class="page">
+    <h1>💬 Discussion Forums</h1>
+    <div class="add-area">
+      <input id="forumTitle" type="text" placeholder="Thread Title">
+      <button id="createThreadBtn">Create Thread</button>
+    </div>
+    <div id="threadsList"></div>
+    <button onclick="showPage('home')" class="btn ghost" style="margin-top:12px">Back</button>
+  </div>
+
+  <!-- ADMIN PAGE -->
+  <div id="adminPage" class="page">
+    <h1>Admin Panel</h1>
+    <div class="add-area">
+      <input id="adminTitle" type="text" placeholder="Title">
+      <input id="adminImg" type="text" placeholder="Image URL">
+      <input id="adminSrc" type="text" placeholder="Video URL">
+      <input id="adminSubs" type="text" placeholder="Subtitles URL (optional)">
+      <select id="adminType">
+        <option value="movies">Movie</option>
+        <option value="shows">Show</option>
       </select>
-      <textarea id="reviewText" placeholder="Write your review..."></textarea>
-      <button id="submitReviewBtn" class="btn">Submit Review</button>
+      <button id="addMediaBtn">Add Media</button>
     </div>
-    <div id="reviewsList"></div>
+    <div id="adminList"></div>
+    <button id="saveToGithubBtn" class="btn">Save Changes to GitHub</button>
+    <button onclick="showPage('home')" class="btn ghost">Back</button>
   </div>
-</div>
-
-<!-- WATCH PARTY PAGE -->
-<div id="watchPartyPage" class="page">
-  <h1>🎉 Watch Party</h1>
-  <div style="margin:12px 0">
-    <button id="createPartyBtn" class="btn">Create Party</button>
-    <input id="joinPartyCode" type="text" placeholder="Enter Party Code">
-    <button id="joinPartyBtn" class="btn ghost">Join Party</button>
-  </div>
-  <div id="partyInfo"></div>
-  <div id="partyChat" style="margin-top:20px;background:#1f1f1f;padding:10px;border-radius:8px;max-height:200px;overflow-y:auto"></div>
-  <input id="partyMsg" type="text" placeholder="Type a message...">
-  <button id="sendPartyMsg" class="btn">Send</button>
-  <button onclick="showPage('home')" class="btn ghost" style="margin-top:12px">Back</button>
-</div>
-
-<!-- FORUM PAGE -->
-<div id="forumPage" class="page">
-  <h1>💬 Discussion Forums</h1>
-  <div class="add-area">
-    <input id="forumTitle" type="text" placeholder="Thread Title">
-    <button id="createThreadBtn">Create Thread</button>
-  </div>
-  <div id="threadsList"></div>
-  <button onclick="showPage('home')" class="btn ghost" style="margin-top:12px">Back</button>
-</div>
-
-<!-- ADMIN PAGE -->
-<div id="adminPage" class="page">
-  <h1>Admin Panel</h1>
-  <div class="add-area">
-    <input id="adminTitle" type="text" placeholder="Title">
-    <input id="adminImg" type="text" placeholder="Image URL">
-    <input id="adminSrc" type="text" placeholder="Video URL">
-    <input id="adminSubs" type="text" placeholder="Subtitles URL (optional)">
-    <select id="adminType">
-      <option value="movies">Movie</option>
-      <option value="shows">Show</option>
-    </select>
-    <button id="addMediaBtn">Add Media</button>
-  </div>
-  <div id="adminList"></div>
-  <button id="saveToGithubBtn" class="btn">Save Changes to GitHub</button>
-  <button onclick="showPage('home')" class="btn ghost">Back</button>
-</div>
 
 </div>
 
 <script>
-// --- FIREBASE CONFIG ---
-const firebaseConfig = {
-  apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
-  authDomain: "fahadflix-storage.firebaseapp.com",
-  databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "fahadflix-storage",
-  storageBucket: "fahadflix-storage.appspot.com",
-  messagingSenderId: "1064833913945",
-  appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
-};
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database();
-let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
+  // FIREBASE CONFIG
+  const firebaseConfig = {
+    apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+    authDomain: "fahadflix-storage.firebaseapp.com",
+    databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "fahadflix-storage",
+    storageBucket: "fahadflix-storage.appspot.com",
+    messagingSenderId: "1064833913945",
+    appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth=firebase.auth(), db=firebase.database();
+  let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
 
-// --- PAGE HANDLER ---
-const pages={ auth:authPage, profiles:profilesPage, home:homePage, episodes:episodesPage, player:playerPage, admin:adminPage, watchParty:watchPartyPage, forum:forumPage };
-function showPage(name){
-  Object.values(pages).forEach(el=>el.classList.remove('active'));
-  pages[name].classList.add('active');
-  if(name!=="player") videoPlayer.pause(); // auto pause when leaving player
-}
+  // --- EXISTING CODE (auth, profiles, home, player, reviews, admin) ---
+  // 🔹 Keep everything from your current version here
 
-// (auth, profiles, home, episodes, player, reviews, admin) 
-// ... [KEEP all your existing JS code here exactly as you had it] ...
-
-// --- WATCH PARTY ---
-let currentParty=null;
-watchPartyBtn.addEventListener('click', ()=> showPage('watchParty'));
-createPartyBtn.addEventListener('click', async ()=>{
-  const code=Math.random().toString(36).substring(2,8).toUpperCase();
-  currentParty=code;
-  await db.ref('watchParties/'+code).set({host:currentUser.uid,chat:{}});
-  partyInfo.innerText="Party Code: "+code;
-  listenPartyChat();
-});
-joinPartyBtn.addEventListener('click', ()=>{
-  const code=joinPartyCode.value.trim().toUpperCase();
-  if(!code) return alert("Enter code");
-  currentParty=code; partyInfo.innerText="Joined Party: "+code;
-  listenPartyChat();
-});
-sendPartyMsg.addEventListener('click', ()=>{
-  if(!currentParty) return;
-  const msg=partyMsg.value.trim();
-  if(!msg) return;
-  db.ref('watchParties/'+currentParty+'/chat').push({user:currentUser.email,text:msg});
-  partyMsg.value='';
-});
-function listenPartyChat(){
-  db.ref('watchParties/'+currentParty+'/chat').on('value',snap=>{
-    partyChat.innerHTML='';
-    if(snap.exists()){
-      Object.values(snap.val()).forEach(m=>{
-        const div=document.createElement('div');
-        div.innerHTML=`<b>${m.user}:</b> ${m.text}`;
-        partyChat.appendChild(div);
-      });
-    }
+  // --- WATCH PARTIES ---
+  let currentParty = null;
+  document.getElementById('watchPartyBtn').addEventListener('click', ()=> showPage('watchPartyPage'));
+  document.getElementById('createPartyBtn').addEventListener('click', async ()=>{
+    const code = Math.random().toString(36).substring(2,8).toUpperCase();
+    currentParty = code;
+    await db.ref('watchParties/'+code).set({host: currentUser.uid, movie: null});
+    document.getElementById('partyInfo').innerText = "Party Code: "+code;
   });
-}
-
-// --- FORUMS ---
-forumBtn.addEventListener('click', ()=>{ showPage('forum'); loadThreads(); });
-createThreadBtn.addEventListener('click', async ()=>{
-  const title=forumTitle.value.trim();
-  if(!title) return alert("Enter title");
-  await db.ref('forums').push({title,posts:{}});
-  forumTitle.value=''; loadThreads();
-});
-async function loadThreads(){
-  const snap=await db.ref('forums').once('value');
-  threadsList.innerHTML='';
-  if(snap.exists()){
-    Object.entries(snap.val()).forEach(([id,thread])=>{
-      const div=document.createElement('div');
-      div.style="padding:10px;margin:6px 0;background:#1f1f1f;border-radius:8px;cursor:pointer";
-      div.innerHTML=`<b>${thread.title}</b>`;
-      div.onclick=()=>openThread(id,thread.title);
-      threadsList.appendChild(div);
+  document.getElementById('joinPartyBtn').addEventListener('click', async ()=>{
+    const code = document.getElementById('joinPartyCode').value.trim().toUpperCase();
+    if(!code) return alert("Enter code");
+    currentParty = code;
+    document.getElementById('partyInfo').innerText = "Joined Party: "+code;
+    listenPartyChat();
+  });
+  document.getElementById('sendPartyMsg').addEventListener('click', ()=>{
+    if(!currentParty) return;
+    const msg=document.getElementById('partyMsg').value.trim();
+    if(!msg) return;
+    const newMsgRef = db.ref('watchParties/'+currentParty+'/chat').push();
+    newMsgRef.set({user: currentUser.email, text: msg});
+    document.getElementById('partyMsg').value='';
+  });
+  function listenPartyChat(){
+    db.ref('watchParties/'+currentParty+'/chat').on('value', snap=>{
+      const chatBox=document.getElementById('partyChat');
+      chatBox.innerHTML='';
+      if(snap.exists()){
+        Object.values(snap.val()).forEach(m=>{
+          const div=document.createElement('div');
+          div.innerHTML = `<b>${m.user}:</b> ${m.text}`;
+          chatBox.appendChild(div);
+        });
+      }
     });
   }
-}
-function openThread(id,title){
-  threadsList.innerHTML=`<h2>${title}</h2><div id="posts"></div>
-    <input id="postText" type="text" placeholder="Write reply...">
-    <button id="sendPostBtn" class="btn">Send</button>
-    <button onclick="loadThreads()" class="btn ghost" style="margin-top:6px">Back</button>`;
-  const postsDiv=document.getElementById('posts');
-  db.ref('forums/'+id+'/posts').on('value',snap=>{
-    postsDiv.innerHTML='';
+
+  // --- FORUMS ---
+  document.getElementById('forumBtn').addEventListener('click', ()=> { showPage('forumPage'); loadThreads(); });
+  document.getElementById('createThreadBtn').addEventListener('click', async ()=>{
+    const title=document.getElementById('forumTitle').value.trim();
+    if(!title) return alert("Enter title");
+    const newRef=db.ref('forums').push();
+    await newRef.set({title, posts:{}});
+    document.getElementById('forumTitle').value='';
+    loadThreads();
+  });
+  async function loadThreads(){
+    const snap=await db.ref('forums').once('value');
+    const list=document.getElementById('threadsList');
+    list.innerHTML='';
     if(snap.exists()){
-      Object.values(snap.val()).forEach(p=>{
-        const d=document.createElement('div');
-        d.style="padding:6px;border-bottom:1px solid #333";
-        d.innerHTML=`<b>${p.user}:</b> ${p.text}`;
-        postsDiv.appendChild(d);
+      Object.entries(snap.val()).forEach(([id,thread])=>{
+        const div=document.createElement('div');
+        div.style="padding:10px;margin:6px 0;background:#1f1f1f;border-radius:8px;cursor:pointer";
+        div.innerHTML=`<b>${thread.title}</b>`;
+        div.onclick=()=>openThread(id,thread.title);
+        list.appendChild(div);
       });
     }
-  });
-  sendPostBtn.onclick=()=>{
-    const text=postText.value.trim(); if(!text) return;
-    db.ref('forums/'+id+'/posts').push({user:currentUser.email,text});
-    postText.value='';
-  };
-}
+  }
+  function openThread(id,title){
+    const list=document.getElementById('threadsList');
+    list.innerHTML=`<h2>${title}</h2><div id="posts"></div>
+      <input id="postText" type="text" placeholder="Write reply...">
+      <button id="sendPostBtn" class="btn">Send</button>
+      <button onclick="loadThreads()" class="btn ghost" style="margin-top:6px">Back</button>`;
+    const postsDiv=document.getElementById('posts');
+    db.ref('forums/'+id+'/posts').on('value',snap=>{
+      postsDiv.innerHTML='';
+      if(snap.exists()){
+        Object.values(snap.val()).forEach(p=>{
+          const d=document.createElement('div');
+          d.style="padding:6px;border-bottom:1px solid #333";
+          d.innerHTML=`<b>${p.user}:</b> ${p.text}`;
+          postsDiv.appendChild(d);
+        });
+      }
+    });
+    document.getElementById('sendPostBtn').onclick=()=>{
+      const text=document.getElementById('postText').value.trim();
+      if(!text) return;
+      db.ref('forums/'+id+'/posts').push({user: currentUser.email, text});
+      document.getElementById('postText').value='';
+    };
+  }
 </script>
 </body>
 </html>
