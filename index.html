@@ -321,96 +321,153 @@ async function renderHome(search=''){
 
 // SHOW / EPISODES
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
-const episodesContainer=document.getElementById('episodesContainer');
 function openShow(show){
-  showPage('episodes'); document.getElementById('showTitle').innerText = show.title;
-  episodesContainer.innerHTML='';
-  (show.episodes||[]).forEach(ep=>{
-    const div=document.createElement('div'); div.className='episode-card'; div.innerText = ep.title;
-    div.addEventListener('click', ()=> openPlayer(ep.title, ep.src, ep.subtitles, show.title));
-    episodesContainer.appendChild(div);
+  showPage('episodes'); 
+  document.getElementById('showTitle').innerText = show.title || 'Show';
+  const episodesContainer = document.getElementById('episodesContainer'); 
+  episodesContainer.innerHTML = '';
+
+  if(show.seasons?.length > 1){
+    const seasonSelect = document.createElement('select');
+    show.seasons.forEach((s,i)=>{ 
+      const total = (s.episodes||[]).length;
+      const available = (s.episodes||[]).filter(ep => ep.src).length;
+      const option=document.createElement('option'); 
+      option.value=i; 
+      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
+      seasonSelect.appendChild(option); 
+    });
+    episodesContainer.appendChild(seasonSelect);
+    seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
+  }
+  renderEpisodes(show,0);
+}
+
+function renderEpisodes(show,seasonIndex){
+  const episodesContainer=document.getElementById('episodesContainer');
+  const dropdown=episodesContainer.querySelector('select');
+  episodesContainer.innerHTML=''; 
+  if(dropdown) episodesContainer.appendChild(dropdown);
+  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
+  (season.episodes||[]).forEach(ep=>{
+    const epCard=document.createElement('div'); 
+    epCard.className='episode-card'; 
+    if(!ep.src){
+      epCard.innerHTML = `<strong>${ep.title || 'Untitled'}</strong><p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>`;
+      epCard.style.opacity="0.6"; epCard.style.cursor="default";
+    } else {
+      epCard.innerText = ep.title || 'Untitled';
+      epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
+    }
+    episodesContainer.appendChild(epCard);
   });
 }
 
 // PLAYER
 const videoPlayer=document.getElementById('videoPlayer');
-function openPlayer(title,src,subs,showTitle=''){
-  showPage('player'); document.getElementById('playerTitle').innerText = title;
-  videoPlayer.src=src;
-  if(subs){ videoPlayer.innerHTML=`<track label="English" kind="subtitles" srclang="en" src="${subs}" default>`; }
-  else{ videoPlayer.innerHTML=''; }
-
-  // Save resume
-  db.ref(`resume/${currentUser.uid}/${showTitle||title}`).set({src:src,time:0});
-}
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
-document.getElementById('toggleSubsBtn').addEventListener('click', ()=> {
-  for(let i=0;i<videoPlayer.textTracks.length;i++){ videoPlayer.textTracks[i].mode = videoPlayer.textTracks[i].mode==='showing'?'hidden':'showing'; }
+document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
+  const tracks=videoPlayer.textTracks||[]; 
+  for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
 });
-
-// REVIEWS
-const reviewsList=document.getElementById('reviewsList');
-const submitReviewBtn=document.getElementById('submitReviewBtn');
-submitReviewBtn.addEventListener('click', async ()=>{
-  const text=document.getElementById('reviewText').value.trim();
-  const rating=parseInt(document.getElementById('reviewRating').value);
-  if(!text) return alert('Write a review');
-  const title=document.getElementById('playerTitle').innerText;
-  await db.ref(`reviews/${title}`).push({user:currentUser.email,text,rating,time:Date.now()});
-  document.getElementById('reviewText').value='';
-  loadReviews(title);
-});
-async function loadReviews(title){
-  const snapshot=await db.ref(`reviews/${title}`).once('value');
-  const data=snapshot.exists()?snapshot.val():{};
-  reviewsList.innerHTML='';
-  let total=0, count=0;
-  Object.values(data).forEach(r=>{
-    total+=r.rating; count++;
-    const div=document.createElement('div'); div.className='review-item';
-    div.innerHTML=`<strong>${r.user}</strong> <span class="review-rating">${'⭐'.repeat(r.rating)}</span><p>${r.text}</p>`;
-    reviewsList.appendChild(div);
-  });
-  document.getElementById('averageRating').innerText = count?`Average Rating: ${(total/count).toFixed(1)} ⭐`:'No ratings yet';
+async function openPlayer(title,src,subs){
+  showPage('player'); 
+  videoPlayer.innerHTML=''; 
+  videoPlayer.src=src||'';
+  currentPartyId = null;
+  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+  videoPlayer.ontimeupdate=()=>{ 
+    if(!videoPlayer.paused && !currentPartyId) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
+    if(currentPartyId) db.ref(`watchparty/${currentPartyId}/time`).set(videoPlayer.currentTime);
+  };
+  document.getElementById('playerTitle').innerText=title;
+  if(subs){
+    const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
+    videoPlayer.appendChild(track);
+  }
+  loadReviews(title); 
+  document.getElementById('partyContainer').style.display='none';
 }
 
-// WATCH PARTY
+// START WATCH PARTY
 document.getElementById('startPartyBtn').addEventListener('click', async ()=>{
-  const title=document.getElementById('playerTitle').innerText;
-  const partyRef = db.ref('parties').push();
+  const title = document.getElementById('playerTitle').innerText;
+  const partyRef = db.ref('watchparty').push();
   currentPartyId = partyRef.key;
-  await partyRef.set({title,src:videoPlayer.src,host:currentUser.uid});
+  await partyRef.set({title,host:currentUser.uid,time:videoPlayer.currentTime});
+  document.getElementById('partyLink').innerText = `${location.href.split('#')[0]}#watchparty=${currentPartyId}`;
   document.getElementById('partyContainer').style.display='block';
-  document.getElementById('partyLink').innerText = window.location.href+'?party='+currentPartyId;
+  // Listen for synced time
+  partyRef.child('time').on('value', snap=>{
+    const t = snap.val();
+    if(t!==undefined && Math.abs(videoPlayer.currentTime-t)>1) videoPlayer.currentTime = t;
+  });
 });
-function checkURLParty(){
-  const urlParams = new URLSearchParams(window.location.search);
-  const partyId = urlParams.get('party');
-  if(partyId){
-    db.ref(`parties/${partyId}`).once('value').then(snapshot=>{
-      if(snapshot.exists()){
-        const data = snapshot.val();
-        openPlayer(data.title,data.src);
-      }
+
+// JOIN PARTY VIA URL
+async function checkURLParty(){
+  const hash = location.hash;
+  if(hash.startsWith('#watchparty=')){
+    const partyId = hash.split('=')[1];
+    currentPartyId = partyId;
+    const partySnap = await db.ref(`watchparty/${partyId}`).once('value');
+    if(!partySnap.exists()) return alert('Invalid party link');
+    const data = partySnap.val();
+    openPlayer(data.title, mediaData.movies.find(m=>m.title===data.title)?.src || mediaData.shows.find(s=>s.title===data.title)?.src, mediaData.movies.find(m=>m.title===data.title)?.subtitles || mediaData.shows.find(s=>s.title===data.title)?.subtitles);
+    // Sync time
+    db.ref(`watchparty/${partyId}/time`).on('value', snap=>{
+      const t = snap.val();
+      if(t!==undefined && Math.abs(videoPlayer.currentTime-t)>1) videoPlayer.currentTime = t;
     });
   }
 }
 
-// ADMIN PANEL
+// REVIEWS
+async function loadReviews(title){
+  const snapshot = await db.ref(`reviews/${title}`).once('value');
+  const reviewsData = snapshot.exists() ? snapshot.val() : {};
+  const reviewsList=document.getElementById('reviewsList');
+  const avgRatingEl=document.getElementById('averageRating');
+  reviewsList.innerHTML='';
+  
+  let total=0, count=0;
+  Object.values(reviewsData).forEach(r=>{
+    total+=r.rating; count++;
+    const div=document.createElement('div'); div.className='review-item';
+    div.innerHTML=`<div class="review-rating">${'⭐'.repeat(r.rating)}</div>
+                   <p>${r.text||''}</p>
+                   <small>by ${r.userEmail||'Anonymous'}</small>`;
+    reviewsList.appendChild(div);
+  });
+  
+  if(count) avgRatingEl.innerHTML=`Average Rating: ${(total/count).toFixed(1)} ⭐ (${count} reviews)`;
+  else avgRatingEl.innerHTML="No reviews yet. Be the first!";
+}
+
+document.getElementById('submitReviewBtn').addEventListener('click', async ()=>{
+  if(!currentUser) return alert("Login required to review.");
+  const rating=parseInt(document.getElementById('reviewRating').value);
+  const text=document.getElementById('reviewText').value.trim();
+  const title=document.getElementById('playerTitle').innerText;
+  await db.ref(`reviews/${title}/${currentUser.uid}`).set({rating,text,userEmail:currentUser.email});
+  document.getElementById('reviewText').value='';
+  loadReviews(title);
+});
+
+// ADMIN
 document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
-  const title=document.getElementById('adminTitle').value.trim();
+  const t=document.getElementById('adminTitle').value.trim();
   const img=document.getElementById('adminImg').value.trim();
   const src=document.getElementById('adminSrc').value.trim();
   const subs=document.getElementById('adminSubs').value.trim();
   const type=document.getElementById('adminType').value;
-  if(!title || !img) return alert('Title & image required');
-  mediaData[type].push({title,img,src,subtitles:subs});
-  await saveMedia();
-  alert('Media added'); renderHome();
+  if(!t||!img||(!src && type==='movies')){ alert('Fill required fields'); return; }
+  const obj={title:t,img,src,subtitles:subs};
+  mediaData[type].push(obj);
+  alert(type+' added!');
+  renderHome();
 });
-async function saveMedia(){ 
-  alert('Saving media is a placeholder. For permanent storage, sync with a server or GitHub.'); 
-}
 </script>
 </body>
 </html>
