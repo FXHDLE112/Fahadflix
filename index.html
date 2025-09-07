@@ -45,8 +45,6 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 .review-rating{color:gold}
 .watch-party{margin-top:12px;text-align:center}
 #partyLink{background:#222;color:#fff;padding:6px 8px;border-radius:6px;display:inline-block;cursor:pointer;word-break:break-all}
-#partyParticipants{margin-top:8px;padding:6px;background:#222;border-radius:6px;font-size:14px}
-.joinPartyBtn{padding:12px 16px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer;margin-top:12px;display:block;margin-left:auto;margin-right:auto}
 @media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
 </style>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
@@ -117,9 +115,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
   </div>
   <div class="watch-party" id="partyContainer" style="display:none">
     Share this link: <div id="partyLink"></div>
-    <div id="partyParticipants">Participants: </div>
   </div>
-  <button id="joinPartyBtn" class="joinPartyBtn" style="display:none">Join Watch Party</button>
   <!-- Reviews Section -->
   <div class="review-section">
     <h2>Reviews & Ratings</h2>
@@ -175,53 +171,246 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(), db=firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
-let currentPartyId=null, partyData=null;
+let currentPartyId=null;
 
 // PAGES
 const pages={ auth: document.getElementById('authPage'), profiles: document.getElementById('profilesPage'), home: document.getElementById('homePage'), episodes: document.getElementById('episodesPage'), player: document.getElementById('playerPage'), admin: document.getElementById('adminPage') };
 function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
 
-// [AUTH, PROFILES, HOME, PLAYER, ADMIN CODE SAME AS BEFORE]
-// --- OMITTING FOR BREVITY --- //
-// You can paste all your previous auth, profiles, home, show, episodes, reviews, admin code here as-is
-
-// JOIN PARTY BUTTON LOGIC
-const joinPartyBtn = document.getElementById('joinPartyBtn');
-joinPartyBtn.addEventListener('click', async () => {
-  if(!partyData) return;
-  openPlayer(partyData.title,
-    mediaData.movies.find(m=>m.title===partyData.title)?.src || mediaData.shows.find(s=>s.title===partyData.title)?.src,
-    mediaData.movies.find(m=>m.title===partyData.title)?.subtitles || mediaData.shows.find(s=>s.title===partyData.title)?.subtitles
-  );
-  // Add current user as participant
-  const pRef = db.ref(`watchparty/${currentPartyId}/participants/${currentUser.uid}`);
-  await pRef.set(currentUser.email);
-  joinPartyBtn.style.display='none';
-  updateParticipants();
+// AUTH
+document.getElementById('signInBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('password').value.trim();
+  if(!email||!pwd){ alert('Enter email & password'); return; }
+  try{
+    const userCred=await auth.signInWithEmailAndPassword(email,pwd);
+    currentUser=userCred.user;
+    await loadProfiles(); 
+    await loadMediaData();
+    showPage('profiles'); renderProfiles();
+    checkURLParty();
+  } catch(e){ alert("Login failed: "+e.message); }
+});
+document.getElementById('signUpBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('password').value.trim();
+  if(!email||!pwd){ alert("Enter email & password"); return; }
+  try{
+    const userCred=await auth.createUserWithEmailAndPassword(email,pwd);
+    currentUser=userCred.user;
+    profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}];
+    await db.ref('profiles/'+currentUser.uid).set(profiles);
+    await loadMediaData();
+    showPage('profiles'); renderProfiles();
+  } catch(e){ alert("Signup failed: "+e.message); }
 });
 
-// PARTICIPANTS LIST
-async function updateParticipants(){
-  if(!currentPartyId) return;
-  const snap = await db.ref(`watchparty/${currentPartyId}/participants`).once('value');
-  const participants = snap.exists() ? Object.values(snap.val()) : [];
-  document.getElementById('partyParticipants').innerText = 'Participants: '+participants.join(', ');
+// LOAD / SAVE PROFILES
+async function loadProfiles(){
+  const snapshot=await db.ref('profiles/'+currentUser.uid).once('value');
+  if(snapshot.exists()) profiles=snapshot.val();
+  else { profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}]; await db.ref('profiles/'+currentUser.uid).set(profiles);}
+}
+async function saveProfiles(){ if(currentUser) await db.ref('profiles/'+currentUser.uid).set(profiles); }
+
+// PROFILES
+const profilesContainer=document.getElementById('profilesContainer');
+document.getElementById('addProfileBtn').addEventListener('click', async ()=>{
+  const name=document.getElementById('newProfileName').value.trim();
+  const file=document.getElementById('newProfileImage').files[0];
+  if(!name){ alert('Enter name'); return; }
+  if(!file){ alert('Pick an image'); return; }
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    profiles.push({name,img:e.target.result});
+    await saveProfiles();
+    document.getElementById('newProfileName').value=''; document.getElementById('newProfileImage').value='';
+    renderProfiles();
+  };
+  reader.readAsDataURL(file);
+});
+function renderProfiles(){
+  profilesContainer.innerHTML='';
+  profiles.forEach((p,index)=>{
+    const div=document.createElement('div'); div.className='profile-card';
+    div.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
+      <button class="btn ghost editBtn">Edit</button>
+      <button class="btn ghost deleteBtn">Delete</button>`;
+    div.querySelector('img').addEventListener('click', async ()=>{
+      showPage('home');
+      document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
+      if(currentUser?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
+      await loadMediaData();
+      renderHome();
+      checkURLParty();
+    });
+    div.querySelector('.editBtn').addEventListener('click', ()=>{ const newName=prompt('Edit profile name:',p.name); if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); } });
+    div.querySelector('.deleteBtn').addEventListener('click', async ()=>{ profiles.splice(index,1); await saveProfiles(); renderProfiles(); });
+    profilesContainer.appendChild(div);
+  });
 }
 
-// CHECK URL PARTY
-async function checkURLParty(){
-  const hash = location.hash;
-  if(hash.startsWith('#watchparty=')){
-    const partyId = hash.split('=')[1];
-    currentPartyId = partyId;
-    const partySnap = await db.ref(`watchparty/${partyId}`).once('value');
-    if(!partySnap.exists()) return alert('Invalid party link');
-    partyData = partySnap.val();
-    joinPartyBtn.style.display='block';
+// SIGN OUT / SWITCH
+document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
+document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
+document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
+
+// LOAD MEDIA
+async function loadMediaData(){
+  try{
+    const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json');
+    mediaData = await response.json();
+    if(!mediaData.movies) mediaData.movies=[]; 
+    if(!mediaData.shows) mediaData.shows=[];
+  } catch(e){ 
+    console.error('Failed to load media data:',e); 
+    mediaData={movies:[], shows:[]}; 
   }
 }
 
-// ALSO SYNC TIME IF PLAYER IS HOST OR PARTICIPANT
+// HOME PAGE with Resume Watching
+const moviesContainer=document.getElementById('moviesContainer');
+document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
+
+async function renderHome(search=''){
+  moviesContainer.innerHTML='';
+
+  // Resume Watching Row
+  const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
+  const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
+  const resumeKeys = Object.keys(resumeData);
+  if(resumeKeys.length){
+    const titleEl = document.createElement('h2');
+    titleEl.innerText = 'Resume Watching';
+    moviesContainer.appendChild(titleEl);
+
+    const row = document.createElement('div'); 
+    row.className = 'row';
+
+    resumeKeys.forEach(key=>{
+      let mediaItem = mediaData.movies.find(m => m.title===key) || mediaData.shows.find(s => s.title===key);
+      if(mediaItem){
+        const card = document.createElement('div'); card.className='movie-card';
+        card.innerHTML = `<img src="${mediaItem.img||''}"><div class="title">${mediaItem.title}</div>`;
+        card.addEventListener('click', ()=> { if(mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); else openShow(mediaItem); });
+        row.appendChild(card);
+      }
+    });
+    moviesContainer.appendChild(row);
+  }
+
+  // Regular Movies / Shows
+  [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
+    let filtered = arr || [];
+    if(label==='Movies'){ filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase()))); } 
+    else { filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase())); }
+    if(filtered.length){
+      const titleEl=document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
+      const row=document.createElement('div'); row.className='row';
+      filtered.forEach(m=>{
+        const card=document.createElement('div'); card.className='movie-card';
+        card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+        card.addEventListener('click', ()=> label==='Movies'?openPlayer(m.title,m.src,m.subtitles):openShow(m));
+        row.appendChild(card);
+      });
+      moviesContainer.appendChild(row);
+    }
+  });
+}
+
+// SHOW / EPISODES
+document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
+const episodesContainer=document.getElementById('episodesContainer');
+function openShow(show){
+  showPage('episodes'); document.getElementById('showTitle').innerText = show.title;
+  episodesContainer.innerHTML='';
+  (show.episodes||[]).forEach(ep=>{
+    const div=document.createElement('div'); div.className='episode-card'; div.innerText = ep.title;
+    div.addEventListener('click', ()=> openPlayer(ep.title, ep.src, ep.subtitles, show.title));
+    episodesContainer.appendChild(div);
+  });
+}
+
+// PLAYER
+const videoPlayer=document.getElementById('videoPlayer');
+function openPlayer(title,src,subs,showTitle=''){
+  showPage('player'); document.getElementById('playerTitle').innerText = title;
+  videoPlayer.src=src;
+  if(subs){ videoPlayer.innerHTML=`<track label="English" kind="subtitles" srclang="en" src="${subs}" default>`; }
+  else{ videoPlayer.innerHTML=''; }
+
+  // Save resume
+  db.ref(`resume/${currentUser.uid}/${showTitle||title}`).set({src:src,time:0});
+}
+document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
+document.getElementById('toggleSubsBtn').addEventListener('click', ()=> {
+  for(let i=0;i<videoPlayer.textTracks.length;i++){ videoPlayer.textTracks[i].mode = videoPlayer.textTracks[i].mode==='showing'?'hidden':'showing'; }
+});
+
+// REVIEWS
+const reviewsList=document.getElementById('reviewsList');
+const submitReviewBtn=document.getElementById('submitReviewBtn');
+submitReviewBtn.addEventListener('click', async ()=>{
+  const text=document.getElementById('reviewText').value.trim();
+  const rating=parseInt(document.getElementById('reviewRating').value);
+  if(!text) return alert('Write a review');
+  const title=document.getElementById('playerTitle').innerText;
+  await db.ref(`reviews/${title}`).push({user:currentUser.email,text,rating,time:Date.now()});
+  document.getElementById('reviewText').value='';
+  loadReviews(title);
+});
+async function loadReviews(title){
+  const snapshot=await db.ref(`reviews/${title}`).once('value');
+  const data=snapshot.exists()?snapshot.val():{};
+  reviewsList.innerHTML='';
+  let total=0, count=0;
+  Object.values(data).forEach(r=>{
+    total+=r.rating; count++;
+    const div=document.createElement('div'); div.className='review-item';
+    div.innerHTML=`<strong>${r.user}</strong> <span class="review-rating">${'⭐'.repeat(r.rating)}</span><p>${r.text}</p>`;
+    reviewsList.appendChild(div);
+  });
+  document.getElementById('averageRating').innerText = count?`Average Rating: ${(total/count).toFixed(1)} ⭐`:'No ratings yet';
+}
+
+// WATCH PARTY
+document.getElementById('startPartyBtn').addEventListener('click', async ()=>{
+  const title=document.getElementById('playerTitle').innerText;
+  const partyRef = db.ref('parties').push();
+  currentPartyId = partyRef.key;
+  await partyRef.set({title,src:videoPlayer.src,host:currentUser.uid});
+  document.getElementById('partyContainer').style.display='block';
+  document.getElementById('partyLink').innerText = window.location.href+'?party='+currentPartyId;
+});
+function checkURLParty(){
+  const urlParams = new URLSearchParams(window.location.search);
+  const partyId = urlParams.get('party');
+  if(partyId){
+    db.ref(`parties/${partyId}`).once('value').then(snapshot=>{
+      if(snapshot.exists()){
+        const data = snapshot.val();
+        openPlayer(data.title,data.src);
+      }
+    });
+  }
+}
+
+// ADMIN PANEL
+document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
+  const title=document.getElementById('adminTitle').value.trim();
+  const img=document.getElementById('adminImg').value.trim();
+  const src=document.getElementById('adminSrc').value.trim();
+  const subs=document.getElementById('adminSubs').value.trim();
+  const type=document.getElementById('adminType').value;
+  if(!title || !img) return alert('Title & image required');
+  mediaData[type].push({title,img,src,subtitles:subs});
+  await saveMedia();
+  alert('Media added'); renderHome();
+});
+async function saveMedia(){ 
+  alert('Saving media is a placeholder. For permanent storage, sync with a server or GitHub.'); 
+}
 </script>
 </body>
 </html>
