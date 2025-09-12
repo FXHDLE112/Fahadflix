@@ -2,12 +2,6 @@
   "movies": [],
   "shows": [
     {
-      "title": "dragon ball dorm",
-      "img": "https://github.com/FXHDLE112/test/releases/download/astorybasedgame1222/website.fix.again.1.1.png",
-      "src": "https://ik.imagekit.io/dookpgmfq9/The%20Legendary%20Beach.mp4?updatedAt=1756452207635",
-      "subtitles": null
-    },
-    {
       "title": "dragon ball dorm Shenanigans",
       "img": "https://github.com/FXHDLE112/test/releases/download/astorybasedgame1222/website.fix.again.1.1.png",
       "seasons": [
@@ -15,10 +9,224 @@
           "season": 1,
           "episodes": [
             {
-              "title": "episode 1",
+              "title": "episode 1 the legendary beach",
               "src": "https://ik.imagekit.io/dookpgmfq9/The%20Legendary%20Beach.mp4?updatedAt=1756452207635",
+              "subtitles": "https://github.com/FXHDLE112/Fahadflix/releases/download/sub/The.Legendary.Beach.vtt"
+            },
+            {
+              "title": "episode 2 campsite chaos",
+              "src": "https://ik.imagekit.io/fheduooz8/0823.mp4?updatedAt=1756738102437",
+              "subtitles": null
+            },
+            {
+              "title": "episode 3 prison outbreak",
+              "src": "https://ik.imagekit.io/fheduooz8/prison%20outbreak%20compressed.mp4?updatedAt=1756738525985",
+              "subtitles": null
+            },
+            {
+              "title": "episode 4 the sleepover",
+              "src": "https://ik.imagekit.io/fwecxrq8d/sleepover.mp4?tr=orig&updatedAt=1756815644449",
               "subtitles": null
             }
+          ]
+        },
+        {
+          "season": 2,
+          "episodes": [
+            { "title": "episode 1 food Truck Frenzy", "src": "https://ik.imagekit.io/fwecxrq8d/Food%20truck%20frenzy.mp4?tr=orig&updatedAt=1756820559228", "subtitles": null },
+            { "title": "episode 2 Waterpark Mayhem", "src": "https://ik.imagekit.io/fwecxrq8d/waterpark%20mayhem.mp4?tr=orig&updatedAt=1756822400288", "subtitles": null },
+            { "title": "episode 3 Haunted room Night!", "src": null, "subtitles": null },
+            { "title": "episode 4 the olympics", "src": null, "subtitles": null },
+            { "title": "episode 5 the great heist ", "src": null, "subtitles": null },
+            { "title": "episode 6 fan art  Allegations", "src": null, "subtitles": null }
+          ]
+        },
+        {
+          "season": 3,
+          "episodes": [
+            { "title": "episode 1 The Mysterious Package from Qatar", "src": null, "subtitles": null },
+            { "title": "episode 2 The dark ages", "src": null, "subtitles": null },
+            { "title": "episode 3 McDonald’s Job Training Disaster", "src": null, "subtitles": null },
+            { "title": "episode 4 Walmart Field Trip", "src": null, "subtitles": null },
+            { "title": "episode 5 Haunted Bathroom", "src": null, "subtitles": null },
+            { "title": "episode 6 lost in mall", "src": null, "subtitles": null },
+            { "title": "episode 7 An Abandoned Warehouse", "src": null, "subtitles": null },
+            { "title": "episode 8 Midway subway ride", "src": null, "subtitles": null },
+            { "title": "episode 9 Dorm court", "src": null, "subtitles": null }
+          ]
+        },
+        {
+          "season": 4,
+          "episodes": [
+            { "title": "episode 1 Midnight Cooking Challenge", "src": null, "subtitles": null },
+            { "title": "episode 2 The Mall Challenge", "src": null, "subtitles": null },
+            { "title": "episode 3 the Hug of Doom", "src": null, "subtitles": null },
+            { "title": "episode 4 Dorm Talent Show: Extreme Edition", "src": null, "subtitles": null },
+            { "title": "episode 5 Metal Cooler Apocalypse", "src": null, "subtitles": null },
+            { "title": "episode 6 The Broly Problem", "src": null, "subtitles": null },
+            { "title": "episode 7 King Kai’s Crazy Party", "src": null, "subtitles": null },
+            { "title": "episode 8 Dorm Army Drill", "src": null, "subtitles": null },
+            { "title": "episode 9 Skydiving Trip", "src": null, "subtitles": null },
+            { "title": "episode 10 Dorm Study Exam", "src": null, "subtitles": null },
+            { "title": "episode 11 Dorm Blackout", "src": null, "subtitles": null },
+            { "title": "episode 12 Dorm Elevator Test", "src": null, "subtitles": null }
+          ]
+        },
+        {
+          "season": 5,
+          "episodes": [
+            { "title": "episode 1 Dorm Olympics Return", "src": null, "subtitles": null },
+            { "title": "episode 2 Karaoke Night Showdown", "src": null, "subtitles": null },
+            { "title": "episode 3 Dorm Haunted Forest Trip", "src": null, "subtitles": null },
+            { "title": "episode 4 Dorm Festival Chaos", "src": null, "subtitles": null },
+            { "title": "episode 5 Frieza’s Cooking Disaster", "src": null, "subtitles": null },
+            { "title": "episode 6 Dorm Battle Royale", "src": null, "subtitles": null },
+            { "title": "episode 7 Piccolo’s Meditation Interrupted", "src": null, "subtitles": null },
+            { "title": "episode 8 The Dorm Arcade War", "src": null, "subtitles": null },
+            { "title": "episode 9 Android 17’s Tech Fair", "src": null, "subtitles": null },
+            { "title": "episode 10 Dorm Ghost Hunters", "src": null, "subtitles": null },
+            { "title": "episode 11 Dorm Science Experiment Gone Wrong", "src": null, "subtitles": null },
+            { "title": "episode 12 Midnight Movie Marathon", "src": null, "subtitles": null },
+            { "title": "episode 13 Dorm Treasure Hunt", "src": null, "subtitles": null },
+            { "title": "episode 14 Buu’s Candy Catastrophe", "src": null, "subtitles": null },
+            { "title": "episode 15 Dorm Space Mission", "src": null, "subtitles": null },
+            { "title": "episode 16 Frieza’s Winter Wonderland", "src": null, "subtitles": null }
+          ]
+        },
+        {
+          "season": 6,
+          "episodes": [
+            { "title": "episode 1 Dorm Movie Night", "src": null, "subtitles": null },
+            { "title": "episode 2 Dorm Road Trip", "src": null, "subtitles": null },
+            { "title": "episode 3 Dorm Graduation Prep", "src": null, "subtitles": null },
+            { "title": "episode 4 Farewell Dorm Party", "src": null, "subtitles": null },
+            { "title": "episode 5 The Final Dorm Battle", "src": null, "subtitles": null },
+            { "title": "episode 6 Dorm Reunion Begins", "src": null, "subtitles": null },
+            { "title": "episode 7 Dorm Camping Trip 2.0", "src": null, "subtitles": null },
+            { "title": "episode 8 Dorm Video Game Tournament", "src": null, "subtitles": null },
+            { "title": "episode 9 Dorm Hidden Basement Mystery", "src": null, "subtitles": null },
+            { "title": "episode 10 Dorm Water Balloon War", "src": null, "subtitles": null },
+            { "title": "episode 11 Dorm Beach Resort", "src": null, "subtitles": null },
+            { "title": "episode 12 Dorm Alien Encounter", "src": null, "subtitles": null },
+            { "title": "episode 13 Dorm Time Travel Mishap", "src": null, "subtitles": null },
+            { "title": "episode 14 Dorm Cooking Rematch", "src": null, "subtitles": null },
+            { "title": "episode 15 Dorm Haunted Hotel", "src": null, "subtitles": null },
+            { "title": "episode 16 Dorm Sky Castle", "src": null, "subtitles": null },
+            { "title": "episode 17 Dorm Racing Tournament", "src": null, "subtitles": null },
+            { "title": "episode 18 Dorm Virtual Reality Trap", "src": null, "subtitles": null },
+            { "title": "episode 19 Dorm Space Trip Finale", "src": null, "subtitles": null },
+            { "title": "episode 20 The True Farewell", "src": null, "subtitles": null }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "dragon ball dorm shenanigans specials",
+      "img": "https://raw.githubusercontent.com/FXHDLE112/test/refs/heads/main/specials.png",
+      "seasons": [
+        {
+          "season": 1,
+          "episodes": [
+            { "title": "Episode 1", "src": null, "subtitles": null },
+            { "title": "Episode 2", "src": null, "subtitles": null },
+            { "title": "Episode 3", "src": null, "subtitles": null },
+            { "title": "Episode 4", "src": null, "subtitles": null },
+            { "title": "Episode 5", "src": null, "subtitles": null },
+            { "title": "Episode 6", "src": null, "subtitles": null },
+            { "title": "Episode 7", "src": null, "subtitles": null },
+            { "title": "Episode 8", "src": null, "subtitles": null },
+            { "title": "Episode 9", "src": null, "subtitles": null },
+            { "title": "Episode 10", "src": null, "subtitles": null },
+            { "title": "Episode 11", "src": null, "subtitles": null },
+            { "title": "Episode 12", "src": null, "subtitles": null },
+            { "title": "Episode 13", "src": null, "subtitles": null },
+            { "title": "Episode 14", "src": null, "subtitles": null },
+            { "title": "Episode 15", "src": null, "subtitles": null },
+            { "title": "Episode 16", "src": null, "subtitles": null },
+            { "title": "Episode 17", "src": null, "subtitles": null },
+            { "title": "Episode 18", "src": null, "subtitles": null },
+            { "title": "Episode 19", "src": null, "subtitles": null },
+            { "title": "Episode 20", "src": null, "subtitles": null },
+            { "title": "Episode 21", "src": null, "subtitles": null },
+            { "title": "Episode 22", "src": null, "subtitles": null },
+            { "title": "Episode 23", "src": null, "subtitles": null },
+            { "title": "Episode 24", "src": null, "subtitles": null },
+            { "title": "Episode 25", "src": null, "subtitles": null },
+            { "title": "Episode 26", "src": null, "subtitles": null },
+            { "title": "Episode 27", "src": null, "subtitles": null },
+            { "title": "Episode 28", "src": null, "subtitles": null },
+            { "title": "Episode 29", "src": null, "subtitles": null },
+            { "title": "Episode 30", "src": null, "subtitles": null },
+            { "title": "Episode 31", "src": null, "subtitles": null },
+            { "title": "Episode 32", "src": null, "subtitles": null },
+            { "title": "Episode 33", "src": null, "subtitles": null },
+            { "title": "Episode 34", "src": null, "subtitles": null },
+            { "title": "Episode 35", "src": null, "subtitles": null },
+            { "title": "Episode 36", "src": null, "subtitles": null },
+            { "title": "Episode 37", "src": null, "subtitles": null },
+            { "title": "Episode 38", "src": null, "subtitles": null },
+            { "title": "Episode 39", "src": null, "subtitles": null },
+            { "title": "Episode 40", "src": null, "subtitles": null },
+            { "title": "Episode 41", "src": null, "subtitles": null },
+            { "title": "Episode 42", "src": null, "subtitles": null },
+            { "title": "Episode 43", "src": null, "subtitles": null },
+            { "title": "Episode 44", "src": null, "subtitles": null },
+            { "title": "Episode 45", "src": null, "subtitles": null },
+            { "title": "Episode 46", "src": null, "subtitles": null },
+            { "title": "Episode 47", "src": null, "subtitles": null },
+            { "title": "Episode 48", "src": null, "subtitles": null },
+            { "title": "Episode 49", "src": null, "subtitles": null },
+            { "title": "Episode 50", "src": null, "subtitles": null },
+            { "title": "Episode 51", "src": null, "subtitles": null },
+            { "title": "Episode 52", "src": null, "subtitles": null },
+            { "title": "Episode 53", "src": null, "subtitles": null },
+            { "title": "Episode 54", "src": null, "subtitles": null },
+            { "title": "Episode 55", "src": null, "subtitles": null },
+            { "title": "Episode 56", "src": null, "subtitles": null },
+            { "title": "Episode 57", "src": null, "subtitles": null },
+            { "title": "Episode 58", "src": null, "subtitles": null },
+            { "title": "Episode 59", "src": null, "subtitles": null },
+            { "title": "Episode 60", "src": null, "subtitles": null },
+            { "title": "Episode 61", "src": null, "subtitles": null },
+            { "title": "Episode 62", "src": null, "subtitles": null },
+            { "title": "Episode 63", "src": null, "subtitles": null },
+            { "title": "Episode 64", "src": null, "subtitles": null },
+            { "title": "Episode 65", "src": null, "subtitles": null },
+            { "title": "Episode 66", "src": null, "subtitles": null },
+            { "title": "Episode 67", "src": null, "subtitles": null },
+            { "title": "Episode 68", "src": null, "subtitles": null },
+            { "title": "Episode 69", "src": null, "subtitles": null },
+            { "title": "Episode 70", "src": null, "subtitles": null },
+            { "title": "Episode 71", "src": null, "subtitles": null },
+            { "title": "Episode 72", "src": null, "subtitles": null },
+            { "title": "Episode 73", "src": null, "subtitles": null },
+            { "title": "Episode 74", "src": null, "subtitles": null },
+            { "title": "Episode 75", "src": null, "subtitles": null },
+            { "title": "Episode 76", "src": null, "subtitles": null },
+            { "title": "Episode 77", "src": null, "subtitles": null },
+            { "title": "Episode 78", "src": null, "subtitles": null },
+            { "title": "Episode 79", "src": null, "subtitles": null },
+            { "title": "Episode 80", "src": null, "subtitles": null },
+            { "title": "Episode 81", "src": null, "subtitles": null },
+            { "title": "Episode 82", "src": null, "subtitles": null },
+            { "title": "Episode 83", "src": null, "subtitles": null },
+            { "title": "Episode 84", "src": null, "subtitles": null },
+            { "title": "Episode 85", "src": null, "subtitles": null },
+            { "title": "Episode 86", "src": null, "subtitles": null },
+            { "title": "Episode 87", "src": null, "subtitles": null },
+            { "title": "Episode 88", "src": null, "subtitles": null },
+            { "title": "Episode 89", "src": null, "subtitles": null },
+            { "title": "Episode 90", "src": null, "subtitles": null },
+            { "title": "Episode 91", "src": null, "subtitles": null },
+            { "title": "Episode 92", "src": null, "subtitles": null },
+            { "title": "Episode 93", "src": null, "subtitles": null },
+            { "title": "Episode 94", "src": null, "subtitles": null },
+            { "title": "Episode 95", "src": null, "subtitles": null },
+            { "title": "Episode 96", "src": null, "subtitles": null },
+            { "title": "Episode 97", "src": null, "subtitles": null },
+            { "title": "Episode 98", "src": null, "subtitles": null },
+            { "title": "Episode 99", "src": null, "subtitles": null },
+            { "title": "Episode 100", "src": null, "subtitles": null }
           ]
         }
       ]
