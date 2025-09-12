@@ -5,6 +5,7 @@
 <title>FahadFlix</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
+/* (styles unchanged from your original — preserved) */
 *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
 body{background:#141414;color:#fff;min-height:100vh}
 .container{max-width:1100px;margin:18px auto;padding:12px}
@@ -45,8 +46,13 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 .review-rating{color:gold}
 .watch-party{margin-top:12px;text-align:center}
 #partyLink{background:#222;color:#fff;padding:6px 8px;border-radius:6px;display:inline-block;cursor:pointer;word-break:break-all}
+.offline-badge{display:inline-block;background:#00a86b;color:#fff;padding:4px 8px;border-radius:6px;margin-left:8px;font-size:13px}
+.progress{width:200px;height:8px;background:#333;border-radius:6px;margin-left:8px;display:inline-block;vertical-align:middle;overflow:hidden}
+.progress > span{display:block;height:100%;width:0%;background:#e50914}
 @media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
 </style>
+
+<!-- firebase libs -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
@@ -104,7 +110,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 
 <!-- PLAYER PAGE -->
 <div id="playerPage" class="page">
-  <h1 id="playerTitle">Player</h1>
+  <h1 id="playerTitle">Player <span id="offlineStatus"></span></h1>
   <div id="player">
     <video id="videoPlayer" controls crossorigin="anonymous"></video>
   </div>
@@ -112,10 +118,14 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
     <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
     <button class="btn ghost" id="playerBackBtn">Back</button>
     <button class="btn" id="startPartyBtn">Start Watch Party</button>
+    <button class="btn" id="downloadBtn" style="margin-left:8px;display:none">Download for offline</button>
+    <button class="btn" id="removeDownloadBtn" style="margin-left:8px;display:none;background:#555">Remove offline</button>
+    <div id="downloadProgress" style="display:inline-block;margin-left:8px;vertical-align:middle"></div>
   </div>
   <div class="watch-party" id="partyContainer" style="display:none">
     Share this link: <div id="partyLink"></div>
   </div>
+
   <!-- Reviews Section -->
   <div class="review-section">
     <h2>Reviews & Ratings</h2>
@@ -158,7 +168,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 </div>
 
 <script>
-// FIREBASE CONFIG
+// FIREBASE CONFIG (unchanged)
 const firebaseConfig = {
   apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
   authDomain: "fahadflix-storage.firebaseapp.com",
@@ -173,11 +183,23 @@ const auth=firebase.auth(), db=firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
 let currentPartyId=null;
 
+// SERVICE WORKER registration (sw.js must be at site root)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg=>{
+    console.log('Service Worker registered', reg.scope);
+  }).catch(err=>{
+    console.warn('SW registration failed:', err);
+  });
+}
+
+// Cache name used by the page (ensure it matches sw.js)
+const VIDEO_CACHE = 'videos-v1';
+
 // PAGES
 const pages={ auth: document.getElementById('authPage'), profiles: document.getElementById('profilesPage'), home: document.getElementById('homePage'), episodes: document.getElementById('episodesPage'), player: document.getElementById('playerPage'), admin: document.getElementById('adminPage') };
 function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
 
-// AUTH
+// AUTH (unchanged logic)
 document.getElementById('signInBtn').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value.trim();
   const pwd=document.getElementById('password').value.trim();
@@ -259,6 +281,7 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 // LOAD MEDIA
 async function loadMediaData(){
   try{
+    // local movies.json (keeps your previous behaviour)
     const response = await fetch('movies.json');
     mediaData = await response.json();
     if(!mediaData.movies) mediaData.movies=[]; 
@@ -276,7 +299,7 @@ document.getElementById('searchInput').addEventListener('input', ()=> renderHome
 async function renderHome(search=''){
   moviesContainer.innerHTML='';
 
-  // Resume Watching Row
+  // Resume Watching Row (unchanged)
   const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
   const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
   const resumeKeys = Object.keys(resumeData);
@@ -300,7 +323,7 @@ async function renderHome(search=''){
     moviesContainer.appendChild(row);
   }
 
-  // Regular Movies / Shows
+  // Regular Movies / Shows (unchanged)
   [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
     let filtered = arr || [];
     if(label==='Movies'){ filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase()))); } 
@@ -319,7 +342,7 @@ async function renderHome(search=''){
   });
 }
 
-// SHOW / EPISODES
+// SHOW / EPISODES (enhanced to support seasons dropdown; unchanged from merged version)
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
 function openShow(show){
   showPage('episodes'); 
@@ -363,34 +386,163 @@ function renderEpisodes(show,seasonIndex){
   });
 }
 
-// PLAYER
+// PLAYER (main changes: offline download & cache checks)
 const videoPlayer=document.getElementById('videoPlayer');
+const downloadBtn = document.getElementById('downloadBtn');
+const removeDownloadBtn = document.getElementById('removeDownloadBtn');
+const downloadProgress = document.getElementById('downloadProgress');
+const offlineStatus = document.getElementById('offlineStatus');
+
 document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
 document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
   const tracks=videoPlayer.textTracks||[]; 
   for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
 });
+
+let currentVideoSrc = null;
+let currentPlayingTitle = null;
+
+async function checkIfCached(src){
+  if(!('caches' in window)) return false;
+  const cache = await caches.open(VIDEO_CACHE);
+  const match = await cache.match(src);
+  return !!match;
+}
+
 async function openPlayer(title,src,subs){
   showPage('player'); 
+  currentPlayingTitle = title;
+  currentVideoSrc = src || '';
+  document.getElementById('playerTitle').innerText = title;
+  document.getElementById('partyContainer').style.display='none';
+  downloadProgress.innerHTML = '';
+
+  // choose playback source:
+  // If service worker + cache has the src, we can set video.src to the original URL:
+  // the SW will intercept and serve cached response even when offline.
+  const isCached = src ? await checkIfCached(src) : false;
+  updateOfflineUI(isCached);
+
   videoPlayer.innerHTML=''; 
-  videoPlayer.src=src||'';
-  currentPartyId = null;
-  const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-  if(snapshot.exists()) videoPlayer.currentTime = snapshot.val();
+  videoPlayer.src = src || '';
+
+  // load saved resume position (unchanged)
+  if(currentUser && title){
+    const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
+    if(snapshot.exists()){
+      const val = snapshot.val();
+      // older code used object or number; handle both
+      const t = (typeof val === 'object' && val.time!==undefined)? val.time : val;
+      if(t) videoPlayer.currentTime = t;
+    }
+  }
+
+  // time update save/resume / watchparty sync (unchanged)
   videoPlayer.ontimeupdate=()=>{ 
-    if(!videoPlayer.paused && !currentPartyId) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
+    if(!videoPlayer.paused && !currentPartyId && currentUser) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
     if(currentPartyId) db.ref(`watchparty/${currentPartyId}/time`).set(videoPlayer.currentTime);
   };
-  document.getElementById('playerTitle').innerText=title;
+
   if(subs){
     const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
     videoPlayer.appendChild(track);
   }
-  loadReviews(title); 
-  document.getElementById('partyContainer').style.display='none';
+  loadReviews(title);
+
+  // show download/remove buttons
+  if(src){
+    downloadBtn.style.display = 'inline-block';
+    removeDownloadBtn.style.display = 'inline-block';
+  } else {
+    downloadBtn.style.display = 'none';
+    removeDownloadBtn.style.display = 'none';
+  }
 }
 
-// START WATCH PARTY
+// update offline UI elements
+function updateOfflineUI(isCached){
+  offlineStatus.innerHTML = isCached ? '<span class="offline-badge">Offline available</span>' : '';
+  if(isCached){
+    downloadBtn.style.display = 'none';
+    removeDownloadBtn.style.display = 'inline-block';
+  } else {
+    downloadBtn.style.display = 'inline-block';
+    removeDownloadBtn.style.display = 'none';
+  }
+}
+
+// Download for offline: fetch and cache the video under the original URL key
+downloadBtn.addEventListener('click', async ()=>{
+  if(!currentVideoSrc) return alert('No video to download');
+  downloadProgress.innerHTML = `<div class="progress"><span style="width:0%"></span></div>`;
+  const bar = downloadProgress.querySelector('.progress > span');
+
+  try{
+    const cache = await caches.open(VIDEO_CACHE);
+
+    // If already cached, skip
+    const already = await cache.match(currentVideoSrc);
+    if(already){ updateOfflineUI(true); downloadProgress.innerHTML='Already downloaded'; return; }
+
+    // Fetch with streaming to show a progress bar if possible
+    const resp = await fetch(currentVideoSrc);
+    if(!resp.ok) throw new Error('Network response was not ok');
+
+    // Try to read body stream and update progress (if supported)
+    const contentLength = resp.headers.get('content-length');
+    if(!resp.body || !contentLength){
+      // no streaming available or no content-length: just cache whole response
+      await cache.put(currentVideoSrc, resp.clone());
+      updateOfflineUI(true);
+      downloadProgress.innerHTML = 'Downloaded';
+      return;
+    }
+
+    // Stream and build a blob while updating progress
+    const total = parseInt(contentLength, 10);
+    const reader = resp.body.getReader();
+    let received = 0;
+    const chunks = [];
+    while(true){
+      const {done, value} = await reader.read();
+      if(done) break;
+      chunks.push(value);
+      received += value.length;
+      const percent = Math.round((received/total)*100);
+      bar.style.width = percent + '%';
+    }
+    const blob = new Blob(chunks);
+    const responseToCache = new Response(blob, {
+      headers: {'Content-Type': resp.headers.get('Content-Type') || 'video/mp4'}
+    });
+    await cache.put(currentVideoSrc, responseToCache);
+    updateOfflineUI(true);
+    downloadProgress.innerHTML = 'Downloaded';
+  }catch(err){
+    console.error('Download failed', err);
+    downloadProgress.innerHTML = 'Download failed';
+  }
+});
+
+// Remove offline copy
+removeDownloadBtn.addEventListener('click', async ()=>{
+  if(!currentVideoSrc) return;
+  try{
+    const cache = await caches.open(VIDEO_CACHE);
+    const deleted = await cache.delete(currentVideoSrc);
+    if(deleted){
+      updateOfflineUI(false);
+      downloadProgress.innerHTML = 'Removed offline copy';
+    } else {
+      downloadProgress.innerHTML = 'No offline copy found';
+    }
+  }catch(err){
+    console.error(err);
+    downloadProgress.innerHTML = 'Error removing';
+  }
+});
+
+// START WATCH PARTY (unchanged functionality)
 document.getElementById('startPartyBtn').addEventListener('click', async ()=>{
   const title = document.getElementById('playerTitle').innerText;
   const partyRef = db.ref('watchparty').push();
@@ -405,7 +557,7 @@ document.getElementById('startPartyBtn').addEventListener('click', async ()=>{
   });
 });
 
-// JOIN PARTY VIA URL
+// JOIN PARTY VIA URL (unchanged)
 async function checkURLParty(){
   const hash = location.hash;
   if(hash.startsWith('#watchparty=')){
@@ -414,7 +566,11 @@ async function checkURLParty(){
     const partySnap = await db.ref(`watchparty/${partyId}`).once('value');
     if(!partySnap.exists()) return alert('Invalid party link');
     const data = partySnap.val();
-    openPlayer(data.title, mediaData.movies.find(m=>m.title===data.title)?.src || mediaData.shows.find(s=>s.title===data.title)?.src, mediaData.movies.find(m=>m.title===data.title)?.subtitles || mediaData.shows.find(s=>s.title===data.title)?.subtitles);
+    // find media src from mediaData
+    const movieSrc = (mediaData.movies.find(m=>m.title===data.title)?.src);
+    const showSrc = (mediaData.shows.find(s=>s.title===data.title)?.src);
+    const foundSrc = movieSrc || showSrc || data.src;
+    openPlayer(data.title, foundSrc, mediaData.movies.find(m=>m.title===data.title)?.subtitles || mediaData.shows.find(s=>s.title===data.title)?.subtitles);
     // Sync time
     db.ref(`watchparty/${partyId}/time`).on('value', snap=>{
       const t = snap.val();
@@ -423,7 +579,7 @@ async function checkURLParty(){
   }
 }
 
-// REVIEWS
+// REVIEWS (unchanged)
 async function loadReviews(title){
   const snapshot = await db.ref(`reviews/${title}`).once('value');
   const reviewsData = snapshot.exists() ? snapshot.val() : {};
@@ -455,7 +611,7 @@ document.getElementById('submitReviewBtn').addEventListener('click', async ()=>{
   loadReviews(title);
 });
 
-// ADMIN
+// ADMIN (unchanged)
 document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
   const t=document.getElementById('adminTitle').value.trim();
   const img=document.getElementById('adminImg').value.trim();
@@ -467,6 +623,14 @@ document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
   mediaData[type].push(obj);
   alert(type+' added!');
   renderHome();
+});
+
+// optional: on load, try to register event listeners or do initial checks
+window.addEventListener('load', ()=> {
+  // When app starts, we can pre-open the video cache (optional)
+  if('caches' in window) caches.open(VIDEO_CACHE).catch(()=>{});
+  // Attempt to update UI if arriving with watchparty hash
+  checkURLParty();
 });
 </script>
 </body>
