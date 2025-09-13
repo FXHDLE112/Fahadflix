@@ -10,22 +10,22 @@
           "episodes": [
             {
               "title": "episode 1 the legendary beach",
-              "src": "https://ik.imagekit.io/dookpgmfq9/The%20Legendary%20Beach.mp4?updatedAt=1756452207635",
-              "subtitles": "https://github.com/FXHDLE112/Fahadflix/releases/download/sub/The.Legendary.Beach.vtt"
+              "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/The.Legendary.Beach.mp4",
+              "subtitles": "shows-sub/dragon ball dorm/episode 1.vtt"
             },
             {
               "title": "episode 2 campsite chaos",
-              "src": "https://ik.imagekit.io/fheduooz8/0823.mp4?updatedAt=1756738102437",
+              "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/camsite.chaos.4.mp4",
               "subtitles": null
             },
             {
               "title": "episode 3 prison outbreak",
-              "src": "https://ik.imagekit.io/fheduooz8/prison%20outbreak%20compressed.mp4?updatedAt=1756738525985",
+              "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/prison.outbreak.compressed.mp4",
               "subtitles": null
             },
             {
               "title": "episode 4 the sleepover",
-              "src": "https://ik.imagekit.io/fwecxrq8d/sleepover.mp4?tr=orig&updatedAt=1756815644449",
+              "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/sleepover.mp4",
               "subtitles": null
             }
           ]
@@ -33,8 +33,8 @@
         {
           "season": 2,
           "episodes": [
-            { "title": "episode 1 food Truck Frenzy", "src": "https://ik.imagekit.io/fwecxrq8d/Food%20truck%20frenzy.mp4?tr=orig&updatedAt=1756820559228", "subtitles": null },
-            { "title": "episode 2 Waterpark Mayhem", "src": "https://ik.imagekit.io/fwecxrq8d/waterpark%20mayhem.mp4?tr=orig&updatedAt=1756822400288", "subtitles": null },
+            { "title": "episode 1 food Truck Frenzy", "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/Food.truck.frenzy.mp4", "subtitles": null },
+            { "title": "episode 2 Waterpark Mayhem", "src": "https://github.com/FXHDLE112/tes-html/releases/download/moviees/waterpark.mayhem.1.mp4", "subtitles": null },
             { "title": "episode 3 Haunted room Night!", "src": null, "subtitles": null },
             { "title": "episode 4 the olympics", "src": null, "subtitles": null },
             { "title": "episode 5 the great heist ", "src": null, "subtitles": null },
