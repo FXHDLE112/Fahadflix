@@ -10,38 +10,22 @@
           "episodes": [
             {
               "title": "episode 1 the legendary beach",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "The.Legendary.Beach.mp4"
-              },
+              "src": "https://dl.dropboxusercontent.com/s/iddg9ztme6aalwvmscdbz/The-Legendary-Beach.mp4",
               "subtitles": "shows-sub/dragon ball dorm/episode 1.vtt"
             },
             {
               "title": "episode 2 campsite chaos",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "Campsite.Chaos.mp4"
-              },
+              "src": "https://dl.dropboxusercontent.com/s/lc1t8q0hd0cytkx8ezfp5/camsite-chaos-4.mp4",
               "subtitles": null
             },
             {
               "title": "episode 3 prison outbreak",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "Prison.Outbreak.mp4"
-              },
+              "src": "https://dl.dropboxusercontent.com/s/1nachps3a1h7py23fpphr/prison-outbreak-compressed.mp4",
               "subtitles": null
             },
             {
               "title": "episode 4 the sleepover",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "The.Sleepover.mp4"
-              },
+              "src": "https://dl.dropboxusercontent.com/s/n39yg6wlo4lqnbsnrw0v6/sleepover.mp4",
               "subtitles": null
             }
           ]
@@ -49,28 +33,12 @@
         {
           "season": 2,
           "episodes": [
-            {
-              "title": "episode 1 Food Truck Frenzy",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "Food.Truck.Frenzy.mp4"
-              },
-              "subtitles": null
-            },
-            {
-              "title": "episode 2 Waterpark Mayhem",
-              "src": {
-                "repo": "Fahadflix",
-                "tag": "movie",
-                "asset": "Waterpark.Mayhem.mp4"
-              },
-              "subtitles": null
-            },
+            { "title": "episode 1 food Truck Frenzy", "src": "https://ik.imagekit.io/fwecxrq8d/Food%20truck%20frenzy.mp4?tr=orig&updatedAt=1756820559228", "subtitles": null },
+            { "title": "episode 2 Waterpark Mayhem", "src": "https://ik.imagekit.io/fwecxrq8d/waterpark%20mayhem.mp4?tr=orig&updatedAt=1756822400288", "subtitles": null },
             { "title": "episode 3 Haunted room Night!", "src": null, "subtitles": null },
             { "title": "episode 4 the olympics", "src": null, "subtitles": null },
-            { "title": "episode 5 the great heist", "src": null, "subtitles": null },
-            { "title": "episode 6 fan art Allegations", "src": null, "subtitles": null }
+            { "title": "episode 5 the great heist ", "src": null, "subtitles": null },
+            { "title": "episode 6 fan art  Allegations", "src": null, "subtitles": null }
           ]
         },
         {
@@ -163,7 +131,12 @@
             { "title": "Episode 2", "src": null, "subtitles": null },
             { "title": "Episode 3", "src": null, "subtitles": null },
             { "title": "Episode 4", "src": null, "subtitles": null },
-            { "title": "Episode 5", "src": null, "subtitles": null }
+            { "title": "Episode 5", "src": null, "subtitles": null },
+            { "title": "Episode 6", "src": null, "subtitles": null },
+            { "title": "Episode 7", "src": null, "subtitles": null },
+            { "title": "Episode 8", "src": null, "subtitles": null },
+            { "title": "Episode 9", "src": null, "subtitles": null },
+            { "title": "Episode 10", "src": null, "subtitles": null }
           ]
         }
       ]
