@@ -278,17 +278,19 @@ document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
 document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
 
-// LOAD MEDIA
+// LOAD MEDIA FROM GITHUB
 async function loadMediaData(){
   try{
-    // local movies.json (keeps your previous behaviour)
-    const response = await fetch('movies.json');
+    const githubURL = 'https://raw.githubusercontent.com/FXHDLE112/Fahadflix/main/movies.json'; // replace with your actual raw JSON URL
+    const response = await fetch(githubURL);
+    if(!response.ok) throw new Error('Failed to fetch media JSON from GitHub');
     mediaData = await response.json();
-    if(!mediaData.movies) mediaData.movies=[]; 
-    if(!mediaData.shows) mediaData.shows=[];
-  } catch(e){ 
-    console.error('Failed to load media data:',e); 
-    mediaData={movies:[], shows:[]}; 
+    if(!mediaData.movies) mediaData.movies = [];
+    if(!mediaData.shows) mediaData.shows = [];
+    console.log('Media data loaded from GitHub');
+  } catch(e){
+    console.error('Failed to load media data:', e);
+    mediaData = {movies:[], shows:[]};
   }
 }
 
