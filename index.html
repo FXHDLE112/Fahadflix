@@ -281,12 +281,12 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 // LOAD MEDIA
 async function loadMediaData(){
   try{
-const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json', {
-  headers: {
-    'Cache-Control': 'no-cache'
-  }
-});
-
+    // Fetch directly from the tes-html GitHub raw file
+    const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json', {
+      headers: {
+        'Cache-Control': 'no-cache'
+      }
+    });
     mediaData = await response.json();
     if(!mediaData.movies) mediaData.movies=[]; 
     if(!mediaData.shows) mediaData.shows=[];
@@ -295,6 +295,7 @@ const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-ht
     mediaData={movies:[], shows:[]}; 
   }
 }
+
 
 // HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
