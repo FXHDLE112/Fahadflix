@@ -282,7 +282,7 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 async function loadMediaData(){
   try{
     // local movies.json (keeps your previous behaviour)
-    const response = await fetch('movies.json');
+    const response = await fetch('data/movies.json');
     mediaData = await response.json();
     if(!mediaData.movies) mediaData.movies=[]; 
     if(!mediaData.shows) mediaData.shows=[];
