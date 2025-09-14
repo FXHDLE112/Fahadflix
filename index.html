@@ -304,10 +304,18 @@ document.getElementById('searchInput').addEventListener('input', ()=> renderHome
 async function renderHome(search=''){
   moviesContainer.innerHTML='';
 
-  // Resume Watching Row (unchanged)
-  const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
-  const resumeData = resumeSnapshot.exists() ? resumeSnapshot.val() : {};
-  const resumeKeys = Object.keys(resumeData);
+  // Resume Watching Row (safe)
+  let resumeData = {};
+  try {
+    const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
+    if(resumeSnapshot.exists()) resumeData = resumeSnapshot.val();
+  } catch(err){
+    console.warn('Failed to load resume data:', err);
+    resumeData = {};
+  }
+
+  const resumeKeys = resumeData && typeof resumeData === 'object' ? Object.keys(resumeData) : [];
+  
   if(resumeKeys.length){
     const titleEl = document.createElement('h2');
     titleEl.innerText = 'Resume Watching';
@@ -317,22 +325,28 @@ async function renderHome(search=''){
     row.className = 'row';
 
     resumeKeys.forEach(key=>{
-      let mediaItem = mediaData.movies.find(m => m.title===key) || mediaData.shows.find(s => s.title===key);
+      let mediaItem = (mediaData.movies || []).find(m => m.title===key) || (mediaData.shows || []).find(s => s.title===key);
       if(mediaItem){
         const card = document.createElement('div'); card.className='movie-card';
         card.innerHTML = `<img src="${mediaItem.img||''}"><div class="title">${mediaItem.title}</div>`;
-        card.addEventListener('click', ()=> { if(mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); else openShow(mediaItem); });
+        card.addEventListener('click', ()=> { 
+          if(mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); 
+          else openShow(mediaItem); 
+        });
         row.appendChild(card);
       }
     });
     moviesContainer.appendChild(row);
   }
 
-  // Regular Movies / Shows (unchanged)
-  [['Movies', mediaData.movies], ['Shows', mediaData.shows]].forEach(([label, arr])=>{
-    let filtered = arr || [];
-    if(label==='Movies'){ filtered = filtered.filter(m => m.src && (!search || m.title.toLowerCase().includes(search.toLowerCase()))); } 
-    else { filtered = filtered.filter(m => !search || m.title.toLowerCase().includes(search.toLowerCase())); }
+  // Regular Movies / Shows (safe)
+  [['Movies', mediaData.movies || []], ['Shows', mediaData.shows || []]].forEach(([label, arr])=>{
+    let filtered = arr;
+    if(label==='Movies'){ 
+      filtered = filtered.filter(m => m.src && (!search || m.title?.toLowerCase().includes(search.toLowerCase()))); 
+    } else { 
+      filtered = filtered.filter(m => !search || m.title?.toLowerCase().includes(search.toLowerCase())); 
+    }
     if(filtered.length){
       const titleEl=document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
       const row=document.createElement('div'); row.className='row';
@@ -346,6 +360,7 @@ async function renderHome(search=''){
     }
   });
 }
+
 
 // SHOW / EPISODES (enhanced to support seasons dropdown; unchanged from merged version)
 document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
