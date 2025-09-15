@@ -652,6 +652,105 @@ window.addEventListener('load', ()=> {
   // Attempt to update UI if arriving with watchparty hash
   checkURLParty();
 });
+
+// ---------------------- REMEMBER LAST SIGNED-IN USER ----------------------
+
+// On load: check localStorage for last signed-in user
+window.addEventListener('load', async () => {
+  const savedUser = localStorage.getItem('lastUser');
+  const savedProfiles = localStorage.getItem('lastProfiles');
+
+  if(savedUser && savedProfiles && !currentUser){
+    try{
+      // Try to restore Firebase user silently
+      const uid = savedUser;
+      profiles = JSON.parse(savedProfiles);
+
+      // Fake a currentUser object with minimal info
+      currentUser = { uid, email: localStorage.getItem('lastEmail') || 'offline@example.com' };
+
+      renderProfiles();
+      showPage('profiles');
+      console.log('Loaded last signed-in user from localStorage');
+      
+      // Optionally, pre-load media data
+      await loadMediaData();
+      renderHome();
+
+    } catch(err){
+      console.warn('Failed to restore last signed-in user:', err);
+      showPage('auth');
+    }
+  }
+});
+
+// After successful login or signup, save user locally
+async function saveLastUserLocally(){
+  if(currentUser){
+    localStorage.setItem('lastUser', currentUser.uid);
+    localStorage.setItem('lastEmail', currentUser.email || '');
+    localStorage.setItem('lastProfiles', JSON.stringify(profiles));
+  }
+}
+
+// Hook into your existing signIn/signUp handlers
+document.getElementById('signInBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('password').value.trim();
+  if(!email||!pwd){ alert('Enter email & password'); return; }
+  try{
+    const userCred=await auth.signInWithEmailAndPassword(email,pwd);
+    currentUser=userCred.user;
+    await loadProfiles(); 
+    await loadMediaData();
+    renderProfiles(); 
+    showPage('profiles');
+    await saveLastUserLocally();   // <-- Save user
+    checkURLParty();
+  } catch(e){ alert("Login failed: "+e.message); }
+});
+
+document.getElementById('signUpBtn').addEventListener('click', async ()=>{
+  const email=document.getElementById('email').value.trim();
+  const pwd=document.getElementById('password').value.trim();
+  if(!email||!pwd){ alert("Enter email & password"); return; }
+  try{
+    const userCred=await auth.createUserWithEmailAndPassword(email,pwd);
+    currentUser=userCred.user;
+    profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}];
+    await db.ref('profiles/'+currentUser.uid).set(profiles);
+    await loadMediaData();
+    renderProfiles(); 
+    showPage('profiles');
+    await saveLastUserLocally();   // <-- Save user
+  } catch(e){ alert("Signup failed: "+e.message); }
+});
+
+// Save profiles locally whenever profiles are updated
+async function saveProfiles(){
+  if(currentUser){
+    await db.ref('profiles/'+currentUser.uid).set(profiles);
+    await saveLastUserLocally();  // update localStorage copy
+  }
+}
+
+// Optional: clear localStorage on logout
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await auth.signOut();
+  currentUser=null;
+  localStorage.removeItem('lastUser');
+  localStorage.removeItem('lastEmail');
+  localStorage.removeItem('lastProfiles');
+  showPage('auth');
+});
+document.getElementById('signOutBtn').addEventListener('click', async ()=>{
+  await auth.signOut();
+  currentUser=null;
+  localStorage.removeItem('lastUser');
+  localStorage.removeItem('lastEmail');
+  localStorage.removeItem('lastProfiles');
+  showPage('auth');
+});
 </script>
 </body>
 </html>
