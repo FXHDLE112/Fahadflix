@@ -180,19 +180,19 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth(), db = firebase.database();
-let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
-let currentPartyId=null;
+let currentUser = null, profiles = [], mediaData = { movies: [], shows: [] };
+let currentPartyId = null;
 
-// SERVICE WORKER registration
+// SERVICE WORKER REGISTRATION
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(reg=>{
+  navigator.serviceWorker.register('/sw.js').then(reg => {
     console.log('Service Worker registered', reg.scope);
-  }).catch(err=>console.warn('SW registration failed:', err));
+  }).catch(err => console.warn('SW registration failed:', err));
 }
 const VIDEO_CACHE = 'videos-v1';
 
 // PAGES
-const pages={
+const pages = {
   auth: document.getElementById('authPage'),
   profiles: document.getElementById('profilesPage'),
   home: document.getElementById('homePage'),
@@ -200,119 +200,122 @@ const pages={
   player: document.getElementById('playerPage'),
   admin: document.getElementById('adminPage')
 };
-function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
+function showPage(name) {
+  Object.values(pages).forEach(el => el.classList.remove('active'));
+  pages[name].classList.add('active');
+}
 
-// AUTH LOGIC
-document.getElementById('signInBtn').addEventListener('click', async ()=>{
-  const email=document.getElementById('email').value.trim();
-  const pwd=document.getElementById('password').value.trim();
-  if(!email||!pwd){ alert('Enter email & password'); return; }
-  try{
-    const userCred=await auth.signInWithEmailAndPassword(email,pwd);
-    currentUser=userCred.user;
+// AUTH
+document.getElementById('signInBtn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('password').value.trim();
+  if (!email || !pwd) { alert('Enter email & password'); return; }
+  try {
+    const userCred = await auth.signInWithEmailAndPassword(email, pwd);
+    currentUser = userCred.user;
     await loadProfiles();
     await loadMediaData();
     showPage('profiles'); renderProfiles();
     checkURLParty();
-  } catch(e){ alert("Login failed: "+e.message); }
+  } catch (e) { alert("Login failed: " + e.message); }
 });
 
-document.getElementById('signUpBtn').addEventListener('click', async ()=>{
-  const email=document.getElementById('email').value.trim();
-  const pwd=document.getElementById('password').value.trim();
-  if(!email||!pwd){ alert("Enter email & password"); return; }
-  try{
-    const userCred=await auth.createUserWithEmailAndPassword(email,pwd);
-    currentUser=userCred.user;
-    profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}];
-    await db.ref('profiles/'+currentUser.uid).set(profiles);
+document.getElementById('signUpBtn').addEventListener('click', async () => {
+  const email = document.getElementById('email').value.trim();
+  const pwd = document.getElementById('password').value.trim();
+  if (!email || !pwd) { alert("Enter email & password"); return; }
+  try {
+    const userCred = await auth.createUserWithEmailAndPassword(email, pwd);
+    currentUser = userCred.user;
+    profiles = [{ name: "User 1", img: "https://via.placeholder.com/150" }];
+    await db.ref('profiles/' + currentUser.uid).set(profiles);
     await loadMediaData();
     showPage('profiles'); renderProfiles();
-  } catch(e){ alert("Signup failed: "+e.message); }
+  } catch (e) { alert("Signup failed: " + e.message); }
 });
 
-// LOAD / SAVE PROFILES
-async function loadProfiles(){
-  const snapshot = await db.ref('profiles/'+currentUser.uid).once('value');
-  if(snapshot.exists()) profiles = snapshot.val();
-  else { profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}]; await db.ref('profiles/'+currentUser.uid).set(profiles);}
+// PROFILES
+async function loadProfiles() {
+  const snapshot = await db.ref('profiles/' + currentUser.uid).once('value');
+  if (snapshot.exists()) profiles = snapshot.val();
+  else { profiles = [{ name: "User 1", img: "https://via.placeholder.com/150" }]; await db.ref('profiles/' + currentUser.uid).set(profiles); }
 }
-async function saveProfiles(){ if(currentUser) await db.ref('profiles/'+currentUser.uid).set(profiles); }
+async function saveProfiles() { if (currentUser) await db.ref('profiles/' + currentUser.uid).set(profiles); }
 
-// PROFILES RENDER
-const profilesContainer=document.getElementById('profilesContainer');
-document.getElementById('addProfileBtn').addEventListener('click', async ()=>{
-  const name=document.getElementById('newProfileName').value.trim();
-  const file=document.getElementById('newProfileImage').files[0];
-  if(!name){ alert('Enter name'); return; }
-  if(!file){ alert('Pick an image'); return; }
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    profiles.push({name,img:e.target.result});
+const profilesContainer = document.getElementById('profilesContainer');
+document.getElementById('addProfileBtn').addEventListener('click', async () => {
+  const name = document.getElementById('newProfileName').value.trim();
+  const file = document.getElementById('newProfileImage').files[0];
+  if (!name) { alert('Enter name'); return; }
+  if (!file) { alert('Pick an image'); return; }
+  const reader = new FileReader();
+  reader.onload = async e => {
+    profiles.push({ name, img: e.target.result });
     await saveProfiles();
-    document.getElementById('newProfileName').value=''; document.getElementById('newProfileImage').value='';
+    document.getElementById('newProfileName').value = '';
+    document.getElementById('newProfileImage').value = '';
     renderProfiles();
   };
   reader.readAsDataURL(file);
 });
-function renderProfiles(){
-  profilesContainer.innerHTML='';
-  profiles.forEach((p,index)=>{
-    const div=document.createElement('div'); div.className='profile-card';
-    div.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
+
+function renderProfiles() {
+  profilesContainer.innerHTML = '';
+  profiles.forEach((p, index) => {
+    const div = document.createElement('div'); div.className = 'profile-card';
+    div.innerHTML = `<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
       <button class="btn ghost editBtn">Edit</button>
       <button class="btn ghost deleteBtn">Delete</button>`;
-    div.querySelector('img').addEventListener('click', async ()=>{
+    div.querySelector('img').addEventListener('click', async () => {
       showPage('home');
-      document.getElementById('welcomeTitle').innerText='Welcome, '+p.name;
-      if(currentUser?.email==='fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display='inline-block';
+      document.getElementById('welcomeTitle').innerText = 'Welcome, ' + p.name;
+      if (currentUser?.email === 'fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display = 'inline-block';
       await loadMediaData();
       renderHome();
       checkURLParty();
     });
-    div.querySelector('.editBtn').addEventListener('click', ()=>{ const newName=prompt('Edit profile name:',p.name); if(newName){ profiles[index].name=newName; saveProfiles().then(renderProfiles); } });
-    div.querySelector('.deleteBtn').addEventListener('click', async ()=>{ profiles.splice(index,1); await saveProfiles(); renderProfiles(); });
+    div.querySelector('.editBtn').addEventListener('click', () => {
+      const newName = prompt('Edit profile name:', p.name);
+      if (newName) { profiles[index].name = newName; saveProfiles().then(renderProfiles); }
+    });
+    div.querySelector('.deleteBtn').addEventListener('click', async () => { profiles.splice(index, 1); await saveProfiles(); renderProfiles(); });
     profilesContainer.appendChild(div);
   });
 }
 
-// SIGN OUT / SWITCH PROFILE
-document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
-document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
-document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied'); } });
+// SIGN OUT / SWITCH
+document.getElementById('signOutBtn').addEventListener('click', async () => { await auth.signOut(); currentUser = null; showPage('auth'); });
+document.getElementById('logoutBtn').addEventListener('click', async () => { await auth.signOut(); currentUser = null; showPage('auth'); });
+document.getElementById('switchProfileBtn').addEventListener('click', () => showPage('profiles'));
+document.getElementById('adminToggleBtn').addEventListener('click', () => { if (currentUser?.email === 'fxhdle2@gmail.com') { showPage('admin'); } else { alert('Access denied: Admins only'); } });
 
-// ✅ LOAD MEDIA (CORS SAFE)
-async function loadMovies() {
+// LOAD MEDIA ONLY FROM NETLIFY
+async function loadMediaData() {
   const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
 
-  // 1️⃣ Try loading from localStorage first
+  // Check cache first
   const cached = localStorage.getItem("moviesData");
   if (cached) {
-    try {
-      console.log("Loaded movies.json from local cache");
-      return JSON.parse(cached);
-    } catch {
-      console.warn("Corrupt cache, ignoring...");
-    }
+    try { console.log("Loaded movies.json from cache"); return JSON.parse(cached); }
+    catch { console.warn("Corrupt cache, ignoring..."); }
   }
 
-  // 2️⃣ Fetch from Netlify only
   try {
     const resp = await fetch(NETLIFY_URL);
     if (!resp.ok) throw new Error("Failed to fetch from Netlify");
     const data = await resp.json();
-    localStorage.setItem("moviesData", JSON.stringify(data)); // cache for offline
+    localStorage.setItem("moviesData", JSON.stringify(data));
     console.log("Loaded movies.json from Netlify");
+    mediaData = data;
     return data;
   } catch (err) {
-    console.error("Fetching movies.json failed:", err.message);
-    throw new Error("Could not load movies.json from Netlify");
+    console.error("Failed to load media data:", err.message);
+    throw err;
   }
 }
 
-// Usage
-loadMovies()
+// USAGE
+loadMediaData()
   .then(data => {
     mediaData.movies = data.movies || [];
     mediaData.shows = data.shows || [];
@@ -320,47 +323,51 @@ loadMovies()
   })
   .catch(err => console.error(err));
 
-// HOME PAGE with Resume Watching
-const moviesContainer=document.getElementById('moviesContainer');
-document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
+// SEARCH & HOME
+const moviesContainer = document.getElementById('moviesContainer');
+document.getElementById('searchInput').addEventListener('input', () => renderHome(document.getElementById('searchInput').value.trim()));
 
-async function renderHome(search=''){
-  moviesContainer.innerHTML='';
+async function renderHome(search = '') {
+  moviesContainer.innerHTML = '';
 
-  // Resume Watching Row (safe)
+  // Resume Watching
   let resumeData = {};
-  try {
-    const resumeSnapshot = await db.ref(`resume/${currentUser.uid}`).once('value');
-    if(resumeSnapshot.exists()) resumeData = resumeSnapshot.val();
-  } catch(err){
-    console.warn('Failed to load resume data:', err);
-    resumeData = {};
-  }
+  try { const snapshot = await db.ref(`resume/${currentUser.uid}`).once('value'); if (snapshot.exists()) resumeData = snapshot.val(); }
+  catch (err) { console.warn('Failed to load resume data:', err); resumeData = {}; }
 
   const resumeKeys = resumeData && typeof resumeData === 'object' ? Object.keys(resumeData) : [];
-  
-  if(resumeKeys.length){
-    const titleEl = document.createElement('h2');
-    titleEl.innerText = 'Resume Watching';
-    moviesContainer.appendChild(titleEl);
-
-    const row = document.createElement('div'); 
-    row.className = 'row';
-
-    resumeKeys.forEach(key=>{
-      let mediaItem = (mediaData.movies || []).find(m => m.title===key) || (mediaData.shows || []).find(s => s.title===key);
-      if(mediaItem){
-        const card = document.createElement('div'); card.className='movie-card';
+  if (resumeKeys.length) {
+    const titleEl = document.createElement('h2'); titleEl.innerText = 'Resume Watching'; moviesContainer.appendChild(titleEl);
+    const row = document.createElement('div'); row.className = 'row';
+    resumeKeys.forEach(key => {
+      let mediaItem = (mediaData.movies || []).find(m => m.title === key) || (mediaData.shows || []).find(s => s.title === key);
+      if (mediaItem) {
+        const card = document.createElement('div'); card.className = 'movie-card';
         card.innerHTML = `<img src="${mediaItem.img||''}"><div class="title">${mediaItem.title}</div>`;
-        card.addEventListener('click', ()=> { 
-          if(mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); 
-          else openShow(mediaItem); 
-        });
+        card.addEventListener('click', () => { if (mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); else openShow(mediaItem); });
         row.appendChild(card);
       }
     });
     moviesContainer.appendChild(row);
   }
+
+  [['Movies', mediaData.movies || []], ['Shows', mediaData.shows || []]].forEach(([label, arr]) => {
+    let filtered = arr;
+    if (label === 'Movies') filtered = filtered.filter(m => m.src && (!search || m.title?.toLowerCase().includes(search.toLowerCase())));
+    else filtered = filtered.filter(m => !search || m.title?.toLowerCase().includes(search.toLowerCase()));
+    if (filtered.length) {
+      const titleEl = document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
+      const row = document.createElement('div'); row.className = 'row';
+      filtered.forEach(m => {
+        const card = document.createElement('div'); card.className = 'movie-card';
+        card.innerHTML = `<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
+        card.addEventListener('click', () => label === 'Movies' ? openPlayer(m.title, m.src, m.subtitles) : openShow(m));
+        row.appendChild(card);
+      });
+      moviesContainer.appendChild(row);
+    }
+  });
+}
 
   // Regular Movies / Shows (safe)
   [['Movies', mediaData.movies || []], ['Shows', mediaData.shows || []]].forEach(([label, arr])=>{
