@@ -283,30 +283,60 @@ document.getElementById('switchProfileBtn').addEventListener('click', ()=> showP
 document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied'); } });
 
 // ✅ LOAD MEDIA (CORS SAFE)
-async function loadMediaData(){
+async function loadMovies() {
   const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
+  const GITHUB_RAW = "https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json";
 
-  // 1️⃣ Try localStorage first
+  // 1️⃣ Try localStorage cache first
   const cached = localStorage.getItem("moviesData");
   if(cached){
-    try{ mediaData = JSON.parse(cached); console.log("Loaded mediaData from cache"); return; } 
-    catch{ console.warn("Corrupt cache, ignoring"); }
+    try { 
+      console.log("Loaded movies.json from localStorage"); 
+      return JSON.parse(cached); 
+    } catch{ console.warn("Corrupt local cache"); }
   }
 
-  // 2️⃣ Fetch from Netlify
-  try{
+  // 2️⃣ Try Netlify fetch
+  try {
     const resp = await fetch(NETLIFY_URL);
     if(!resp.ok) throw new Error("Netlify fetch failed");
     const data = await resp.json();
-    mediaData = data;
     localStorage.setItem("moviesData", JSON.stringify(data));
-    console.log("Loaded mediaData from Netlify");
+    console.log("Loaded movies.json from Netlify");
+    return data;
   } catch(err){
-    console.error("Failed to load mediaData:", err);
-    // fallback empty
-    mediaData = {movies:[], shows:[]};
-    localStorage.setItem("moviesData", JSON.stringify(mediaData));
+    console.warn("Netlify fetch failed:", err.message);
   }
+
+  // 3️⃣ Try GitHub via proxy
+  try {
+    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(GITHUB_RAW);
+    const resp = await fetch(proxyUrl);
+    if(!resp.ok) throw new Error("GitHub fetch failed");
+    const data = await resp.json();
+    localStorage.setItem("moviesData", JSON.stringify(data));
+    console.log("Loaded movies.json from GitHub via proxy");
+    return data;
+  } catch(err){
+    console.warn("GitHub fetch failed:", err.message);
+  }
+
+  // 4️⃣ Try SW cache
+  if('caches' in window){
+    try {
+      const cache = await caches.open('fahadflix-v1');
+      const cachedResp = await cache.match(NETLIFY_URL);
+      if(cachedResp) {
+        const data = await cachedResp.json();
+        console.log("Loaded movies.json from SW cache");
+        return data;
+      }
+    } catch(err){ console.warn("SW cache load failed:", err.message); }
+  }
+
+  // 5️⃣ Ultimate fallback: empty JSON
+  console.warn("All sources failed. Returning empty data.");
+  return {movies:[], shows:[]};
 }
 
 // HOME PAGE with Resume Watching
