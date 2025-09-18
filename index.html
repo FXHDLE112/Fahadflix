@@ -280,42 +280,43 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 
 
 // LOAD MEDIA
-
 async function loadMovies() {
-  const cached = localStorage.getItem("moviesData");
-  if (cached) return JSON.parse(cached);
+  const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
 
+  // 1️⃣ Check local cache first
+  const cached = localStorage.getItem("moviesData");
+  if (cached) {
+    try {
+      console.log("Loaded movies.json from local cache");
+      return JSON.parse(cached);
+    } catch {
+      console.warn("Corrupt cache, ignoring...");
+    }
+  }
+
+  // 2️⃣ Fetch from Netlify
   try {
-    const resp = await fetch("https://fahadflix.netlify.app/movies.json");
-    if (!resp.ok) throw new Error("Failed to fetch Netlify JSON");
+    const resp = await fetch(NETLIFY_URL);
+    if (!resp.ok) throw new Error("Failed to fetch movies.json from Netlify");
     const data = await resp.json();
+
+    // Save to localStorage for offline usage
     localStorage.setItem("moviesData", JSON.stringify(data));
+    console.log("Loaded movies.json from Netlify");
     return data;
   } catch (err) {
-    console.error("Failed to load movies.json:", err);
+    console.error("Fetch movies.json failed:", err.message);
+    // Fallback to empty object
     return { movies: [], shows: [] };
   }
 }
 
+// USAGE
+loadMovies().then(data => {
+  mediaData = data;      // store globally
+  renderHome();           // render UI
+});
 
-
-  
-// Usage
-loadMovies()
-  .then(data => {
-    Object.keys(data).forEach(key => {
-      console.log("Movie category:", key, data[key]);
-      // Render your movies...
-    });
-  })
-  .catch(error => {
-    console.error(error);
-  });
-
-
-
-
-  
 // HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
 document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
