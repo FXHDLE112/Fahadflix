@@ -8,34 +8,9 @@ const STATIC_ASSETS = [
 ];
 
 // Install event
-self.addEventListener('install', event => {
-  console.log('[SW] Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(async cache => {
-      for(const asset of STATIC_ASSETS){
-        try {
-          await cache.add(asset);
-          console.log('[SW] Cached', asset);
-        } catch(err){
-          console.warn('[SW] Failed to cache', asset, err);
-        }
-      }
-    })
-  );
-  self.skipWaiting();
-});
-
-// Activate event
-self.addEventListener('activate', event => {
-  console.log('[SW] Activating...');
-  event.waitUntil(self.clients.claim());
-});
-
-// Fetch event
 self.addEventListener('fetch', event => {
   const req = event.request;
 
-  // Only handle GET requests
   if(req.method !== 'GET') return;
 
   event.respondWith(
@@ -45,20 +20,28 @@ self.addEventListener('fetch', event => {
       return fetch(req).then(networkResp => {
         if(!networkResp || !networkResp.ok) return networkResp;
 
-        // Cache network response for future
+        // Cache network response
         return caches.open(CACHE_NAME).then(cache => {
           cache.put(req, networkResp.clone());
           return networkResp;
         });
       }).catch(err => {
-        console.warn('[SW] Fetch failed, returning fallback', req.url);
+        console.warn('[SW] Fetch failed:', req.url, err);
+
+        // ✅ Ensure valid JSON fallback for movies.json
         if(req.url.endsWith('movies.json')){
-          // return empty JSON as fallback
-          return new Response(JSON.stringify({movies:[], shows:[]}), {
-            headers: {'Content-Type':'application/json'}
+          const fallback = { movies: [], shows: [] };
+          return new Response(JSON.stringify(fallback), {
+            headers: { 'Content-Type': 'application/json' }
           });
         }
-        return new Response('Offline', {status:503, statusText:'Offline'});
+
+        // Fallback for other resources
+        return new Response(JSON.stringify({error:'Offline'}), {
+          headers: { 'Content-Type': 'application/json' },
+          status: 503,
+          statusText: 'Offline'
+        });
       });
     })
   );
