@@ -244,12 +244,33 @@ function renderProfiles(){
   const container=document.getElementById('profilesContainer');
   container.innerHTML='';
   profiles.forEach((p,i)=>{
-    const card=document.createElement('div');card.className='profile-card';
+    const card=document.createElement('div');
+    card.className='profile-card';
     card.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>`;
-    const delBtn=document.createElement('button');delBtn.textContent='Delete';delBtn.onclick=()=>{profiles.splice(i,1);saveProfiles();renderProfiles();}
-    card.appendChild(delBtn);container.appendChild(card);
+
+    // Select profile → go to Home
+    card.onclick=()=>{
+      localStorage.setItem("lastProfile", JSON.stringify(p)); // save for auto-login later
+      document.getElementById('welcomeTitle').textContent = `Welcome, ${p.name}`;
+      showPage('home');
+      renderMedia();
+    };
+
+    // Delete button
+    const delBtn=document.createElement('button');
+    delBtn.textContent='Delete';
+    delBtn.onclick=(e)=>{
+      e.stopPropagation(); // prevent triggering profile select
+      profiles.splice(i,1);
+      saveProfiles();
+      renderProfiles();
+    };
+
+    card.appendChild(delBtn);
+    container.appendChild(card);
   });
 }
+
 
 document.getElementById('addProfileBtn').onclick=()=>{
   const name=document.getElementById('newProfileName').value;
