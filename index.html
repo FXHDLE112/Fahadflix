@@ -3,56 +3,92 @@
 <head>
 <meta charset="UTF-8">
 <title>FahadFlix</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-/* (styles unchanged from your original — preserved) */
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
-body{background:#141414;color:#fff;min-height:100vh}
-.container{max-width:1100px;margin:18px auto;padding:12px}
-.auth-box{max-width:420px;margin:60px auto;padding:20px;background:#1f1f1f;border-radius:10px;text-align:center}
-.auth-box input,.auth-box button{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:none}
-.auth-box input{background:#333;color:#fff}
-.auth-box button{background:#e50914;color:#fff;font-weight:700;cursor:pointer}
-.page{display:none}
-.active{display:block}
-h1,h2{margin:14px 0;text-align:center}
-#profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px}
-.profile-card{width:140px;text-align:center;background:#1b1b1b;padding:8px;border-radius:10px;position:relative}
-.profile-card img{width:120px;height:120px;object-fit:cover;border-radius:12px;cursor:pointer}
-.profile-card p{margin:6px 0}
-.profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px}
-.btn{padding:8px 12px;background:#e50914;border:none;border-radius:6px;color:#fff;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3)}
-.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:8px;display:flex;gap:8px;align-items:center}
-.add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff}
-.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer}
-#moviesContainer{display:flex;flex-direction:column;gap:20px;padding:12px}
-.row{display:flex;gap:12px;overflow-x:auto}
-.movie-card{background:#1d1d1d;border-radius:10px;overflow:hidden;cursor:pointer;position:relative;min-width:160px}
-.movie-card img{width:100%;display:block;height:240px;object-fit:cover;transition:transform .25s}
-.movie-card:hover img{transform:scale(1.05)}
-.movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.55);padding:6px 8px;border-radius:6px}
-.episode-card{background:#1f1f1f;padding:12px;border-radius:8px;cursor:pointer;margin-bottom:8px}
-#player{margin:20px auto;text-align:center}
-video{width:95%;max-width:980px;border-radius:8px;background:#000}
-.controls{display:flex;gap:8px;justify-content:center;margin-top:12px}
-#searchInput{width:100%;padding:10px;margin:12px 0;border-radius:6px;border:none;background:#222;color:#fff}
-.review-section{margin-top:20px;padding:12px;background:#1b1b1b;border-radius:8px}
-.review-form{margin-bottom:14px}
-.review-form textarea{width:100%;padding:8px;border-radius:6px;border:none;background:#222;color:#fff;margin-top:6px}
-.review-form select,.review-form button{padding:8px;border-radius:6px;border:none;margin-top:8px}
-.review-item{padding:8px;border-bottom:1px solid #333}
-.review-item:last-child{border-bottom:none}
-.review-rating{color:gold}
-.watch-party{margin-top:12px;text-align:center}
-#partyLink{background:#222;color:#fff;padding:6px 8px;border-radius:6px;display:inline-block;cursor:pointer;word-break:break-all}
-.offline-badge{display:inline-block;background:#00a86b;color:#fff;padding:4px 8px;border-radius:6px;margin-left:8px;font-size:13px}
-.progress{width:200px;height:8px;background:#333;border-radius:6px;margin-left:8px;display:inline-block;vertical-align:middle;overflow:hidden}
-.progress > span{display:block;height:100%;width:0%;background:#e50914}
-@media(max-width:600px){.add-area{flex-direction:column;align-items:stretch}.movie-card img{height:180px}.profile-card img{width:100px;height:100px}}
+/* ===== GLOBAL STYLES ===== */
+*{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;}
+body{background:#0d0d0d;color:#fff;min-height:100vh;}
+button, input, select, textarea{font-family:inherit;}
+a{text-decoration:none;color:inherit;}
+h1,h2{margin:12px 0;text-align:center;}
+
+/* ===== CONTAINER ===== */
+.container{max-width:1200px;margin:0 auto;padding:16px;}
+
+/* ===== PAGES ===== */
+.page{display:none;}
+.active{display:block;}
+
+/* ===== HEADER ===== */
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.header .btn-group{display:flex;gap:8px;align-items:center;}
+
+/* ===== AUTH ===== */
+.auth-box{max-width:400px;margin:80px auto;padding:24px;background:#1a1a1a;border-radius:12px;text-align:center;box-shadow:0 0 12px rgba(0,0,0,0.5);}
+.auth-box input{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;background:#222;color:#fff;}
+.auth-box button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;cursor:pointer;font-weight:700;transition:0.2s;}
+.auth-box button:hover{opacity:0.85;}
+button.btn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;transition:0.2s;}
+button.btn:hover{opacity:0.85;}
+button.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.3);}
+
+/* ===== PROFILES ===== */
+#profilesContainer{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;margin-top:20px;}
+.profile-card{width:140px;text-align:center;background:#1b1b1b;padding:12px;border-radius:12px;position:relative;transition:0.25s;cursor:pointer;}
+.profile-card:hover{transform:scale(1.05);}
+.profile-card img{width:120px;height:120px;object-fit:cover;border-radius:50%;}
+.profile-card p{margin:8px 0;font-weight:600;}
+.profile-card button{margin-top:4px;width:100%;padding:4px 0;font-size:12px;}
+
+/* ===== ADD PROFILE ===== */
+.add-area{max-width:520px;margin:18px auto;padding:12px;background:#161616;border-radius:10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.add-area input[type="text"], .add-area input[type="file"], .add-area select{flex:1;padding:10px;border-radius:6px;border:none;background:#222;color:#fff;}
+.add-area button{padding:10px 12px;background:#e50914;border:none;color:#fff;border-radius:6px;cursor:pointer;}
+
+/* ===== MOVIES / SHOWS ===== */
+#moviesContainer{display:flex;flex-direction:column;gap:24px;}
+.row{display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;}
+.movie-card{background:#1d1d1d;border-radius:12px;overflow:hidden;cursor:pointer;min-width:180px;transition:0.3s;}
+.movie-card:hover{transform:scale(1.05);}
+.movie-card img{width:100%;height:240px;object-fit:cover;transition:transform 0.3s;}
+.movie-card .title{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,0.6);padding:6px 10px;border-radius:6px;font-weight:600;}
+h2.section-title{margin:8px 0 12px 16px;text-align:left;}
+
+/* ===== EPISODES ===== */
+.episode-card{background:#1f1f1f;padding:12px;border-radius:10px;cursor:pointer;margin-bottom:8px;transition:0.2s;}
+.episode-card:hover{background:#282828;}
+.episode-card p{margin:0;}
+
+/* ===== PLAYER ===== */
+#player{margin:20px auto;text-align:center;position:relative;}
+video{width:95%;max-width:960px;border-radius:12px;background:#000;outline:none;}
+.controls{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+#downloadProgress{margin-left:8px;vertical-align:middle;}
+
+/* ===== OFFLINE BADGE ===== */
+.offline-badge{display:inline-block;background:#00a86b;color:#fff;padding:4px 8px;border-radius:6px;margin-left:8px;font-size:13px;}
+.progress{width:200px;height:8px;background:#333;border-radius:6px;margin-left:8px;display:inline-block;vertical-align:middle;overflow:hidden;}
+.progress > span{display:block;height:100%;width:0%;background:#e50914;transition:0.2s;}
+
+/* ===== SEARCH ===== */
+#searchInput{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:none;background:#222;color:#fff;}
+
+/* ===== REVIEWS ===== */
+.review-section{margin-top:20px;padding:16px;background:#1b1b1b;border-radius:10px;}
+.review-form{margin-bottom:14px;}
+.review-form textarea{width:100%;padding:10px;border-radius:6px;border:none;background:#222;color:#fff;margin-top:6px;resize:none;}
+.review-form select,.review-form button{padding:8px;border-radius:6px;border:none;margin-top:8px;}
+
+/* ===== WATCH PARTY ===== */
+.watch-party{margin-top:12px;text-align:center;}
+#partyLink{background:#222;color:#fff;padding:6px 10px;border-radius:6px;display:inline-block;cursor:pointer;word-break:break-all;}
+
+/* ===== ADMIN ===== */
+#adminList .movie-card{min-width:200px;}
+@media(max-width:768px){.movie-card{min-width:140px;height:200px;}.profile-card img{width:100px;height:100px;}.add-area{flex-direction:column;align-items:stretch;}}
 </style>
 
-<!-- firebase libs -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
@@ -66,7 +102,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
     <h2>Login or Sign Up</h2>
     <input id="email" type="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
-    <button id="signInBtn">Sign In</button>
+    <button id="signInBtn" class="btn">Sign In</button>
     <button id="signUpBtn" class="btn ghost">Sign Up</button>
   </div>
 </div>
@@ -87,9 +123,9 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 
 <!-- HOME PAGE -->
 <div id="homePage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
+  <div class="header">
     <h1 id="welcomeTitle">Browse</h1>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div class="btn-group">
       <button id="switchProfileBtn" class="btn ghost">Switch Profile</button>
       <button id="logoutBtn" class="btn">Logout</button>
       <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
@@ -101,7 +137,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 
 <!-- EPISODES PAGE -->
 <div id="episodesPage" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:center">
+  <div class="header">
     <h1 id="showTitle">Show</h1>
     <button id="backToHome" class="btn ghost">Back</button>
   </div>
@@ -118,15 +154,13 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
     <button class="btn" id="toggleSubsBtn">Toggle Subtitles</button>
     <button class="btn ghost" id="playerBackBtn">Back</button>
     <button class="btn" id="startPartyBtn">Start Watch Party</button>
-    <button class="btn" id="downloadBtn" style="margin-left:8px;display:none">Download for offline</button>
-    <button class="btn" id="removeDownloadBtn" style="margin-left:8px;display:none;background:#555">Remove offline</button>
-    <div id="downloadProgress" style="display:inline-block;margin-left:8px;vertical-align:middle"></div>
+    <button class="btn" id="downloadBtn" style="display:none;margin-left:8px;">Download Offline</button>
+    <button class="btn" id="removeDownloadBtn" style="display:none;margin-left:8px;background:#555;">Remove Offline</button>
+    <div id="downloadProgress"></div>
   </div>
   <div class="watch-party" id="partyContainer" style="display:none">
     Share this link: <div id="partyLink"></div>
   </div>
-
-  <!-- Reviews Section -->
   <div class="review-section">
     <h2>Reviews & Ratings</h2>
     <div id="averageRating"></div>
@@ -158,17 +192,16 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
       <option value="movies">Movie</option>
       <option value="shows">Show</option>
     </select>
-    <button id="addMediaBtn">Add Media</button>
+    <button id="addMediaBtn" class="btn">Add Media</button>
   </div>
   <div id="adminList"></div>
-  <button id="saveToGithubBtn" class="btn">Save Changes to GitHub</button>
   <button onclick="showPage('home')" class="btn ghost">Back</button>
 </div>
 
 </div>
 
 <script>
-// FIREBASE CONFIG
+// ===== FIREBASE =====
 const firebaseConfig = {
   apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
   authDomain: "fahadflix-storage.firebaseapp.com",
@@ -179,511 +212,106 @@ const firebaseConfig = {
   appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
 };
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth(), db = firebase.database();
-let currentUser = null, profiles = [], mediaData = { movies: [], shows: [] };
-let currentPartyId = null;
-
-// SERVICE WORKER REGISTRATION
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then(reg => {
-    console.log('Service Worker registered', reg.scope);
-  }).catch(err => console.warn('SW registration failed:', err));
-}
+const auth=firebase.auth(), db=firebase.database();
+let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
+let currentPartyId=null;
 const VIDEO_CACHE = 'videos-v1';
 
-// PAGES
-const pages = {
-  auth: document.getElementById('authPage'),
-  profiles: document.getElementById('profilesPage'),
-  home: document.getElementById('homePage'),
-  episodes: document.getElementById('episodesPage'),
-  player: document.getElementById('playerPage'),
-  admin: document.getElementById('adminPage')
-};
-function showPage(name) {
-  Object.values(pages).forEach(el => el.classList.remove('active'));
-  pages[name].classList.add('active');
-}
+// ===== PAGES =====
+const pages={ auth: document.getElementById('authPage'), profiles: document.getElementById('profilesPage'), home: document.getElementById('homePage'), episodes: document.getElementById('episodesPage'), player: document.getElementById('playerPage'), admin: document.getElementById('adminPage')};
+function showPage(name){Object.values(pages).forEach(p=>p.classList.remove('active'));pages[name].classList.add('active');}
 
-// AUTH
-document.getElementById('signInBtn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value.trim();
-  const pwd = document.getElementById('password').value.trim();
-  if (!email || !pwd) { alert('Enter email & password'); return; }
-  try {
-    const userCred = await auth.signInWithEmailAndPassword(email, pwd);
-    currentUser = userCred.user;
-    await loadProfiles();
-    await loadMediaData();
-    showPage('profiles'); renderProfiles();
-    checkURLParty();
-  } catch (e) { alert("Login failed: " + e.message); }
+// ===== AUTH =====
+document.getElementById('signInBtn').onclick=()=>auth.signInWithEmailAndPassword(document.getElementById('email').value,document.getElementById('password').value).catch(console.error);
+document.getElementById('signUpBtn').onclick=()=>auth.createUserWithEmailAndPassword(document.getElementById('email').value,document.getElementById('password').value).catch(console.error);
+document.getElementById('signOutBtn').onclick=()=>auth.signOut().catch(console.error);
+
+auth.onAuthStateChanged(user=>{
+  if(user){currentUser=user;loadProfiles();}
+  else{showPage('auth');}
 });
 
-document.getElementById('signUpBtn').addEventListener('click', async () => {
-  const email = document.getElementById('email').value.trim();
-  const pwd = document.getElementById('password').value.trim();
-  if (!email || !pwd) { alert("Enter email & password"); return; }
-  try {
-    const userCred = await auth.createUserWithEmailAndPassword(email, pwd);
-    currentUser = userCred.user;
-    profiles = [{ name: "User 1", img: "https://via.placeholder.com/150" }];
-    await db.ref('profiles/' + currentUser.uid).set(profiles);
-    await loadMediaData();
-    showPage('profiles'); renderProfiles();
-  } catch (e) { alert("Signup failed: " + e.message); }
-});
-
-// PROFILES
-async function loadProfiles() {
-  const snapshot = await db.ref('profiles/' + currentUser.uid).once('value');
-  if (snapshot.exists()) profiles = snapshot.val();
-  else { profiles = [{ name: "User 1", img: "https://via.placeholder.com/150" }]; await db.ref('profiles/' + currentUser.uid).set(profiles); }
-}
-async function saveProfiles() { if (currentUser) await db.ref('profiles/' + currentUser.uid).set(profiles); }
-
-const profilesContainer = document.getElementById('profilesContainer');
-document.getElementById('addProfileBtn').addEventListener('click', async () => {
-  const name = document.getElementById('newProfileName').value.trim();
-  const file = document.getElementById('newProfileImage').files[0];
-  if (!name) { alert('Enter name'); return; }
-  if (!file) { alert('Pick an image'); return; }
-  const reader = new FileReader();
-  reader.onload = async e => {
-    profiles.push({ name, img: e.target.result });
-    await saveProfiles();
-    document.getElementById('newProfileName').value = '';
-    document.getElementById('newProfileImage').value = '';
+// ===== PROFILES =====
+function loadProfiles(){
+  db.ref('profiles/'+currentUser.uid).once('value').then(snap=>{
+    profiles = snap.val() ? Object.values(snap.val()) : [];
     renderProfiles();
-  };
+    showPage('profiles');
+  });
+}
+
+function renderProfiles(){
+  const container=document.getElementById('profilesContainer');
+  container.innerHTML='';
+  profiles.forEach((p,i)=>{
+    const card=document.createElement('div');card.className='profile-card';
+    card.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>`;
+    const delBtn=document.createElement('button');delBtn.textContent='Delete';delBtn.onclick=()=>{profiles.splice(i,1);saveProfiles();renderProfiles();}
+    card.appendChild(delBtn);container.appendChild(card);
+  });
+}
+
+document.getElementById('addProfileBtn').onclick=()=>{
+  const name=document.getElementById('newProfileName').value;
+  const file=document.getElementById('newProfileImage').files[0];
+  if(!name || !file)return alert('Fill all fields');
+  const reader=new FileReader();
+  reader.onload=()=>{profiles.push({name,img:reader.result});saveProfiles();renderProfiles();}
   reader.readAsDataURL(file);
-});
-
-function renderProfiles() {
-  profilesContainer.innerHTML = '';
-  profiles.forEach((p, index) => {
-    const div = document.createElement('div'); div.className = 'profile-card';
-    div.innerHTML = `<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>
-      <button class="btn ghost editBtn">Edit</button>
-      <button class="btn ghost deleteBtn">Delete</button>`;
-    div.querySelector('img').addEventListener('click', async () => {
-      showPage('home');
-      document.getElementById('welcomeTitle').innerText = 'Welcome, ' + p.name;
-      if (currentUser?.email === 'fxhdle2@gmail.com') document.getElementById('adminToggleBtn').style.display = 'inline-block';
-      await loadMediaData();
-      renderHome();
-      checkURLParty();
-    });
-    div.querySelector('.editBtn').addEventListener('click', () => {
-      const newName = prompt('Edit profile name:', p.name);
-      if (newName) { profiles[index].name = newName; saveProfiles().then(renderProfiles); }
-    });
-    div.querySelector('.deleteBtn').addEventListener('click', async () => { profiles.splice(index, 1); await saveProfiles(); renderProfiles(); });
-    profilesContainer.appendChild(div);
-  });
 }
 
-// SIGN OUT / SWITCH
-document.getElementById('signOutBtn').addEventListener('click', async () => { await auth.signOut(); currentUser = null; showPage('auth'); });
-document.getElementById('logoutBtn').addEventListener('click', async () => { await auth.signOut(); currentUser = null; showPage('auth'); });
-document.getElementById('switchProfileBtn').addEventListener('click', () => showPage('profiles'));
-document.getElementById('adminToggleBtn').addEventListener('click', () => { if (currentUser?.email === 'fxhdle2@gmail.com') { showPage('admin'); } else { alert('Access denied: Admins only'); } });
-
-// LOAD MEDIA ONLY FROM NETLIFY
-async function loadMediaData() {
-  const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
-
-  // Check cache first
-  const cached = localStorage.getItem("moviesData");
-  if (cached) {
-    try { console.log("Loaded movies.json from cache"); return JSON.parse(cached); }
-    catch { console.warn("Corrupt cache, ignoring..."); }
-  }
-
-  try {
-    const resp = await fetch(NETLIFY_URL);
-    if (!resp.ok) throw new Error("Failed to fetch from Netlify");
-    const data = await resp.json();
-    localStorage.setItem("moviesData", JSON.stringify(data));
-    console.log("Loaded movies.json from Netlify");
-    mediaData = data;
-    return data;
-  } catch (err) {
-    console.error("Failed to load media data:", err.message);
-    throw err;
-  }
+function saveProfiles(){
+  db.ref('profiles/'+currentUser.uid).set(profiles);
 }
 
-// USAGE
-loadMediaData()
-  .then(data => {
-    mediaData.movies = data.movies || [];
-    mediaData.shows = data.shows || [];
-    renderHome();
-  })
-  .catch(err => console.error(err));
+document.getElementById('switchProfileBtn').onclick=()=>showPage('profiles');
+document.getElementById('logoutBtn').onclick=()=>auth.signOut();
 
-// SEARCH & HOME
-const moviesContainer = document.getElementById('moviesContainer');
-document.getElementById('searchInput').addEventListener('input', () => renderHome(document.getElementById('searchInput').value.trim()));
+// ===== FETCH MEDIA FROM NETLIFY ONLY =====
+async function loadMedia(){
+  try{
+    const res=await fetch('https://fahadflix.netlify.app/movies.json');
+    if(!res.ok)throw new Error('Failed to fetch');
+    const data=await res.json();
+    mediaData=data;
+    renderMedia();
+  }catch(e){console.error('Could not load media',e);}
+}
 
-async function renderHome(search = '') {
-  moviesContainer.innerHTML = '';
-
-  // Resume Watching
-  let resumeData = {};
-  try { const snapshot = await db.ref(`resume/${currentUser.uid}`).once('value'); if (snapshot.exists()) resumeData = snapshot.val(); }
-  catch (err) { console.warn('Failed to load resume data:', err); resumeData = {}; }
-
-  const resumeKeys = resumeData && typeof resumeData === 'object' ? Object.keys(resumeData) : [];
-  if (resumeKeys.length) {
-    const titleEl = document.createElement('h2'); titleEl.innerText = 'Resume Watching'; moviesContainer.appendChild(titleEl);
-    const row = document.createElement('div'); row.className = 'row';
-    resumeKeys.forEach(key => {
-      let mediaItem = (mediaData.movies || []).find(m => m.title === key) || (mediaData.shows || []).find(s => s.title === key);
-      if (mediaItem) {
-        const card = document.createElement('div'); card.className = 'movie-card';
-        card.innerHTML = `<img src="${mediaItem.img||''}"><div class="title">${mediaItem.title}</div>`;
-        card.addEventListener('click', () => { if (mediaItem.src) openPlayer(mediaItem.title, mediaItem.src, mediaItem.subtitles); else openShow(mediaItem); });
-        row.appendChild(card);
-      }
-    });
-    moviesContainer.appendChild(row);
-  }
-
-  [['Movies', mediaData.movies || []], ['Shows', mediaData.shows || []]].forEach(([label, arr]) => {
-    let filtered = arr;
-    if (label === 'Movies') filtered = filtered.filter(m => m.src && (!search || m.title?.toLowerCase().includes(search.toLowerCase())));
-    else filtered = filtered.filter(m => !search || m.title?.toLowerCase().includes(search.toLowerCase()));
-    if (filtered.length) {
-      const titleEl = document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
-      const row = document.createElement('div'); row.className = 'row';
-      filtered.forEach(m => {
-        const card = document.createElement('div'); card.className = 'movie-card';
-        card.innerHTML = `<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
-        card.addEventListener('click', () => label === 'Movies' ? openPlayer(m.title, m.src, m.subtitles) : openShow(m));
-        row.appendChild(card);
+// ===== RENDER MOVIES & SHOWS =====
+function renderMedia(){
+  const container=document.getElementById('moviesContainer');container.innerHTML='';
+  ['movies','shows'].forEach(cat=>{
+    if(mediaData[cat].length){
+      const section=document.createElement('div');
+      section.innerHTML=`<h2 class="section-title">${cat.charAt(0).toUpperCase()+cat.slice(1)}</h2>`;
+      const row=document.createElement('div');row.className='row';
+      mediaData[cat].forEach((m,i)=>{
+        const card=document.createElement('div');card.className='movie-card';
+        card.innerHTML=`<img src="${m.img}" alt="${m.title}"><div class="title">${m.title}</div>`;
+        card.onclick=()=>openPlayer(m);row.appendChild(card);
       });
-      moviesContainer.appendChild(row);
+      section.appendChild(row);container.appendChild(section);
     }
   });
 }
 
-  // Regular Movies / Shows (safe)
-  [['Movies', mediaData.movies || []], ['Shows', mediaData.shows || []]].forEach(([label, arr])=>{
-    let filtered = arr;
-    if(label==='Movies'){ 
-      filtered = filtered.filter(m => m.src && (!search || m.title?.toLowerCase().includes(search.toLowerCase()))); 
-    } else { 
-      filtered = filtered.filter(m => !search || m.title?.toLowerCase().includes(search.toLowerCase())); 
-    }
-    if(filtered.length){
-      const titleEl=document.createElement('h2'); titleEl.innerText = label; moviesContainer.appendChild(titleEl);
-      const row=document.createElement('div'); row.className='row';
-      filtered.forEach(m=>{
-        const card=document.createElement('div'); card.className='movie-card';
-        card.innerHTML=`<img src="${m.img||''}"><div class="title">${m.title||'Untitled'}</div>`;
-        card.addEventListener('click', ()=> label==='Movies'?openPlayer(m.title,m.src,m.subtitles):openShow(m));
-        row.appendChild(card);
-      });
-      moviesContainer.appendChild(row);
-    }
-  });
-}
-
-
-// SHOW / EPISODES (enhanced to support seasons dropdown; unchanged from merged version)
-document.getElementById('backToHome').addEventListener('click', ()=> showPage('home'));
-function openShow(show){
-  showPage('episodes'); 
-  document.getElementById('showTitle').innerText = show.title || 'Show';
-  const episodesContainer = document.getElementById('episodesContainer'); 
-  episodesContainer.innerHTML = '';
-
-  if(show.seasons?.length > 1){
-    const seasonSelect = document.createElement('select');
-    show.seasons.forEach((s,i)=>{ 
-      const total = (s.episodes||[]).length;
-      const available = (s.episodes||[]).filter(ep => ep.src).length;
-      const option=document.createElement('option'); 
-      option.value=i; 
-      option.text = `Season ${s.season || i+1} (${available}/${total} Available)`;
-      seasonSelect.appendChild(option); 
-    });
-    episodesContainer.appendChild(seasonSelect);
-    seasonSelect.addEventListener('change', ()=> renderEpisodes(show,seasonSelect.value));
-  }
-  renderEpisodes(show,0);
-}
-
-function renderEpisodes(show,seasonIndex){
-  const episodesContainer=document.getElementById('episodesContainer');
-  const dropdown=episodesContainer.querySelector('select');
-  episodesContainer.innerHTML=''; 
-  if(dropdown) episodesContainer.appendChild(dropdown);
-  const season=(show.seasons?.[seasonIndex])||{episodes:[]};
-  (season.episodes||[]).forEach(ep=>{
-    const epCard=document.createElement('div'); 
-    epCard.className='episode-card'; 
-    if(!ep.src){
-      epCard.innerHTML = `<strong>${ep.title || 'Untitled'}</strong><p style="color:orange;font-size:13px;margin-top:4px;">Coming Soon</p>`;
-      epCard.style.opacity="0.6"; epCard.style.cursor="default";
-    } else {
-      epCard.innerText = ep.title || 'Untitled';
-      epCard.addEventListener('click', ()=> openPlayer(ep.title,ep.src,ep.subtitles));
-    }
-    episodesContainer.appendChild(epCard);
-  });
-}
-
-// PLAYER (main changes: offline download & cache checks)
+// ===== PLAYER =====
 const videoPlayer=document.getElementById('videoPlayer');
-const downloadBtn = document.getElementById('downloadBtn');
-const removeDownloadBtn = document.getElementById('removeDownloadBtn');
-const downloadProgress = document.getElementById('downloadProgress');
-const offlineStatus = document.getElementById('offlineStatus');
+function openPlayer(media){showPage('player');videoPlayer.src=media.src;document.getElementById('playerTitle').textContent=media.title;}
+document.getElementById('playerBackBtn').onclick=()=>showPage('home');
 
-document.getElementById('playerBackBtn').addEventListener('click', ()=> showPage('home'));
-document.getElementById('toggleSubsBtn').addEventListener('click', ()=>{
-  const tracks=videoPlayer.textTracks||[]; 
-  for(let i=0;i<tracks.length;i++) tracks[i].mode=(tracks[i].mode==='showing'?'hidden':'showing');
-});
-
-let currentVideoSrc = null;
-let currentPlayingTitle = null;
-
-async function checkIfCached(src){
-  if(!('caches' in window)) return false;
-  const cache = await caches.open(VIDEO_CACHE);
-  const match = await cache.match(src);
-  return !!match;
-}
-
-async function openPlayer(title,src,subs){
-  showPage('player'); 
-  currentPlayingTitle = title;
-  currentVideoSrc = src || '';
-  document.getElementById('playerTitle').innerText = title;
-  document.getElementById('partyContainer').style.display='none';
-  downloadProgress.innerHTML = '';
-
-  // choose playback source:
-  // If service worker + cache has the src, we can set video.src to the original URL:
-  // the SW will intercept and serve cached response even when offline.
-  const isCached = src ? await checkIfCached(src) : false;
-  updateOfflineUI(isCached);
-
-  videoPlayer.innerHTML=''; 
-  videoPlayer.src = src || '';
-
-  // load saved resume position (unchanged)
-  if(currentUser && title){
-    const snapshot = await db.ref(`resume/${currentUser.uid}/${title}`).once('value');
-    if(snapshot.exists()){
-      const val = snapshot.val();
-      // older code used object or number; handle both
-      const t = (typeof val === 'object' && val.time!==undefined)? val.time : val;
-      if(t) videoPlayer.currentTime = t;
-    }
-  }
-
-  // time update save/resume / watchparty sync (unchanged)
-  videoPlayer.ontimeupdate=()=>{ 
-    if(!videoPlayer.paused && !currentPartyId && currentUser) db.ref(`resume/${currentUser.uid}/${title}`).set(videoPlayer.currentTime); 
-    if(currentPartyId) db.ref(`watchparty/${currentPartyId}/time`).set(videoPlayer.currentTime);
-  };
-
-  if(subs){
-    const track=document.createElement('track'); track.kind='subtitles'; track.src=subs; track.default=true;
-    videoPlayer.appendChild(track);
-  }
-  loadReviews(title);
-
-  // show download/remove buttons
-  if(src){
-    downloadBtn.style.display = 'inline-block';
-    removeDownloadBtn.style.display = 'inline-block';
-  } else {
-    downloadBtn.style.display = 'none';
-    removeDownloadBtn.style.display = 'none';
-  }
-}
-
-// update offline UI elements
-function updateOfflineUI(isCached){
-  offlineStatus.innerHTML = isCached ? '<span class="offline-badge">Offline available</span>' : '';
-  if(isCached){
-    downloadBtn.style.display = 'none';
-    removeDownloadBtn.style.display = 'inline-block';
-  } else {
-    downloadBtn.style.display = 'inline-block';
-    removeDownloadBtn.style.display = 'none';
-  }
-}
-
-// Download for offline: fetch and cache the video under the original URL key
-downloadBtn.addEventListener('click', async ()=>{
-  if(!currentVideoSrc) return alert('No video to download');
-  downloadProgress.innerHTML = `<div class="progress"><span style="width:0%"></span></div>`;
-  const bar = downloadProgress.querySelector('.progress > span');
-
-  try{
-    const cache = await caches.open(VIDEO_CACHE);
-
-    // If already cached, skip
-    const already = await cache.match(currentVideoSrc);
-    if(already){ updateOfflineUI(true); downloadProgress.innerHTML='Already downloaded'; return; }
-
-    // Fetch with streaming to show a progress bar if possible
-    const resp = await fetch(currentVideoSrc);
-    if(!resp.ok) throw new Error('Network response was not ok');
-
-    // Try to read body stream and update progress (if supported)
-    const contentLength = resp.headers.get('content-length');
-    if(!resp.body || !contentLength){
-      // no streaming available or no content-length: just cache whole response
-      await cache.put(currentVideoSrc, resp.clone());
-      updateOfflineUI(true);
-      downloadProgress.innerHTML = 'Downloaded';
-      return;
-    }
-
-    // Stream and build a blob while updating progress
-    const total = parseInt(contentLength, 10);
-    const reader = resp.body.getReader();
-    let received = 0;
-    const chunks = [];
-    while(true){
-      const {done, value} = await reader.read();
-      if(done) break;
-      chunks.push(value);
-      received += value.length;
-      const percent = Math.round((received/total)*100);
-      bar.style.width = percent + '%';
-    }
-    const blob = new Blob(chunks);
-    const responseToCache = new Response(blob, {
-      headers: {'Content-Type': resp.headers.get('Content-Type') || 'video/mp4'}
-    });
-    await cache.put(currentVideoSrc, responseToCache);
-    updateOfflineUI(true);
-    downloadProgress.innerHTML = 'Downloaded';
-  }catch(err){
-    console.error('Download failed', err);
-    downloadProgress.innerHTML = 'Download failed';
-  }
-});
-
-// Remove offline copy
-removeDownloadBtn.addEventListener('click', async ()=>{
-  if(!currentVideoSrc) return;
-  try{
-    const cache = await caches.open(VIDEO_CACHE);
-    const deleted = await cache.delete(currentVideoSrc);
-    if(deleted){
-      updateOfflineUI(false);
-      downloadProgress.innerHTML = 'Removed offline copy';
-    } else {
-      downloadProgress.innerHTML = 'No offline copy found';
-    }
-  }catch(err){
-    console.error(err);
-    downloadProgress.innerHTML = 'Error removing';
-  }
-});
-
-// START WATCH PARTY (unchanged functionality)
-document.getElementById('startPartyBtn').addEventListener('click', async ()=>{
-  const title = document.getElementById('playerTitle').innerText;
-  const partyRef = db.ref('watchparty').push();
-  currentPartyId = partyRef.key;
-  await partyRef.set({title,host:currentUser.uid,time:videoPlayer.currentTime});
-  document.getElementById('partyLink').innerText = `${location.href.split('#')[0]}#watchparty=${currentPartyId}`;
-  document.getElementById('partyContainer').style.display='block';
-  // Listen for synced time
-  partyRef.child('time').on('value', snap=>{
-    const t = snap.val();
-    if(t!==undefined && Math.abs(videoPlayer.currentTime-t)>1) videoPlayer.currentTime = t;
+// ===== SEARCH =====
+document.getElementById('searchInput').oninput=e=>{
+  const query=e.target.value.toLowerCase();
+  Object.values(mediaData).flat().forEach(m=>{
+    m.visible = m.title.toLowerCase().includes(query);
   });
-});
-
-// JOIN PARTY VIA URL (unchanged)
-async function checkURLParty(){
-  const hash = location.hash;
-  if(hash.startsWith('#watchparty=')){
-    const partyId = hash.split('=')[1];
-    currentPartyId = partyId;
-    const partySnap = await db.ref(`watchparty/${partyId}`).once('value');
-    if(!partySnap.exists()) return alert('Invalid party link');
-    const data = partySnap.val();
-    // find media src from mediaData
-    const movieSrc = (mediaData.movies.find(m=>m.title===data.title)?.src);
-    const showSrc = (mediaData.shows.find(s=>s.title===data.title)?.src);
-    const foundSrc = movieSrc || showSrc || data.src;
-    openPlayer(data.title, foundSrc, mediaData.movies.find(m=>m.title===data.title)?.subtitles || mediaData.shows.find(s=>s.title===data.title)?.subtitles);
-    // Sync time
-    db.ref(`watchparty/${partyId}/time`).on('value', snap=>{
-      const t = snap.val();
-      if(t!==undefined && Math.abs(videoPlayer.currentTime-t)>1) videoPlayer.currentTime = t;
-    });
-  }
+  renderMedia();
 }
 
-// REVIEWS (unchanged)
-async function loadReviews(title){
-  const snapshot = await db.ref(`reviews/${title}`).once('value');
-  const reviewsData = snapshot.exists() ? snapshot.val() : {};
-  const reviewsList=document.getElementById('reviewsList');
-  const avgRatingEl=document.getElementById('averageRating');
-  reviewsList.innerHTML='';
-  
-  let total=0, count=0;
-  Object.values(reviewsData).forEach(r=>{
-    total+=r.rating; count++;
-    const div=document.createElement('div'); div.className='review-item';
-    div.innerHTML=`<div class="review-rating">${'⭐'.repeat(r.rating)}</div>
-                   <p>${r.text||''}</p>
-                   <small>by ${r.userEmail||'Anonymous'}</small>`;
-    reviewsList.appendChild(div);
-  });
-  
-  if(count) avgRatingEl.innerHTML=`Average Rating: ${(total/count).toFixed(1)} ⭐ (${count} reviews)`;
-  else avgRatingEl.innerHTML="No reviews yet. Be the first!";
-}
-
-document.getElementById('submitReviewBtn').addEventListener('click', async ()=>{
-  if(!currentUser) return alert("Login required to review.");
-  const rating=parseInt(document.getElementById('reviewRating').value);
-  const text=document.getElementById('reviewText').value.trim();
-  const title=document.getElementById('playerTitle').innerText;
-  await db.ref(`reviews/${title}/${currentUser.uid}`).set({rating,text,userEmail:currentUser.email});
-  document.getElementById('reviewText').value='';
-  loadReviews(title);
-});
-
-// ADMIN (unchanged)
-document.getElementById('addMediaBtn').addEventListener('click', async ()=>{
-  const t=document.getElementById('adminTitle').value.trim();
-  const img=document.getElementById('adminImg').value.trim();
-  const src=document.getElementById('adminSrc').value.trim();
-  const subs=document.getElementById('adminSubs').value.trim();
-  const type=document.getElementById('adminType').value;
-  if(!t||!img||(!src && type==='movies')){ alert('Fill required fields'); return; }
-  const obj={title:t,img,src,subtitles:subs};
-  mediaData[type].push(obj);
-  alert(type+' added!');
-  renderHome();
-});
-
-// optional: on load, try to register event listeners or do initial checks
-window.addEventListener('load', ()=> {
-  // When app starts, we can pre-open the video cache (optional)
-  if('caches' in window) caches.open(VIDEO_CACHE).catch(()=>{});
-  // Attempt to update UI if arriving with watchparty hash
-  checkURLParty();
-});
-
-
+// ===== INITIAL LOAD =====
+loadMedia();
 </script>
 </body>
 </html>
