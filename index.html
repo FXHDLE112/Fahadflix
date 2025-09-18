@@ -279,60 +279,32 @@ document.getElementById('switchProfileBtn').addEventListener('click', ()=> showP
 document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
 
 
-// LOAD MEDIA
-async function loadMovies() {
+// ✅ LOAD MEDIA (CORS SAFE)
+async function loadMediaData(){
   const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
-  const GITHUB_RAW = "https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json";
 
-  // 1️⃣ Local cache first
+  // 1️⃣ Try localStorage first
   const cached = localStorage.getItem("moviesData");
-  if (cached) {
-    try {
-      console.log("Loaded movies.json from local cache");
-      return JSON.parse(cached);
-    } catch {
-      console.warn("Corrupt cache, ignoring...");
-    }
+  if(cached){
+    try{ mediaData = JSON.parse(cached); console.log("Loaded mediaData from cache"); return; } 
+    catch{ console.warn("Corrupt cache, ignoring"); }
   }
 
-  // 2️⃣ Try Netlify
-  try {
+  // 2️⃣ Fetch from Netlify
+  try{
     const resp = await fetch(NETLIFY_URL);
-    if (!resp.ok) throw new Error("Failed Netlify fetch");
+    if(!resp.ok) throw new Error("Netlify fetch failed");
     const data = await resp.json();
+    mediaData = data;
     localStorage.setItem("moviesData", JSON.stringify(data));
-    console.log("Loaded movies.json from Netlify");
-    return data;
-  } catch (err) {
-    console.warn("Netlify fetch failed:", err.message);
+    console.log("Loaded mediaData from Netlify");
+  } catch(err){
+    console.error("Failed to load mediaData:", err);
+    // fallback empty
+    mediaData = {movies:[], shows:[]};
+    localStorage.setItem("moviesData", JSON.stringify(mediaData));
   }
-
-  // 3️⃣ Fallback: GitHub via CORS proxy
-  try {
-    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(GITHUB_RAW);
-    const resp = await fetch(proxyUrl);
-    if (!resp.ok) throw new Error("Failed GitHub fetch");
-    const data = await resp.json();
-    localStorage.setItem("moviesData", JSON.stringify(data));
-    console.log("Loaded movies.json from GitHub via proxy");
-    return data;
-  } catch (err) {
-    console.error("GitHub fetch failed:", err.message);
-  }
-
-  throw new Error("Could not load movies.json from any source");
 }
-
-// Usage
-loadMovies()
-  .then(data => {
-    mediaData.movies = data.movies || [];
-    mediaData.shows = data.shows || [];
-    renderHome();
-  })
-  .catch(err => console.error(err));
-
-  .catch(err => console.error(err));
 
 // HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
