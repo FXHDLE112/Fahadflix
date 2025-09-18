@@ -1,74 +1,65 @@
-const CACHE_NAME = 'fahadflix-cache-v1';
-const VIDEO_CACHE = 'videos-v1';
+const CACHE_NAME = 'fahadflix-v1';
 const STATIC_ASSETS = [
-  '/', // home page
-  '/index.html', // your main HTML
-  '/styles.css', // optional if external
+  '/index.html',
+  '/styles.css', // optional, if you have CSS separate
+  '/script.js',  // optional, if you have JS separate
   '/favicon.ico',
-  'https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js',
-  'https://fahadflix.netlify.app/movies.json' // cache your JSON
+  '/movies.json' // we will try caching but won't fail if offline
 ];
 
-// INSTALL
+// Install event
 self.addEventListener('install', event => {
   console.log('[SW] Installing...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then(async cache => {
+      for(const asset of STATIC_ASSETS){
+        try {
+          await cache.add(asset);
+          console.log('[SW] Cached', asset);
+        } catch(err){
+          console.warn('[SW] Failed to cache', asset, err);
+        }
+      }
+    })
   );
+  self.skipWaiting();
 });
 
-// ACTIVATE
+// Activate event
 self.addEventListener('activate', event => {
   console.log('[SW] Activating...');
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.map(key => {
-        if(key !== CACHE_NAME && key !== VIDEO_CACHE){
-          console.log('[SW] Removing old cache', key);
-          return caches.delete(key);
-        }
-      })
-    ))
-  );
+  event.waitUntil(self.clients.claim());
 });
 
-// FETCH
+// Fetch event
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+  const req = event.request;
 
-  // 1️⃣ Video caching
-  if(url.origin === location.origin || event.request.destination === 'video'){
-    event.respondWith(
-      caches.open(VIDEO_CACHE).then(cache =>
-        cache.match(event.request).then(resp => {
-          if(resp) return resp;
-          return fetch(event.request).then(networkResp => {
-            if(networkResp.ok) cache.put(event.request, networkResp.clone());
-            return networkResp;
-          }).catch(() => resp || new Response('Video unavailable offline', {status:503}));
-        })
-      )
-    );
-    return;
-  }
+  // Only handle GET requests
+  if(req.method !== 'GET') return;
 
-  // 2️⃣ JSON / static files caching
-  if(STATIC_ASSETS.includes(url.href) || STATIC_ASSETS.includes(url.pathname)){
-    event.respondWith(
-      caches.match(event.request).then(resp => {
-        return resp || fetch(event.request).then(networkResp => {
-          if(networkResp.ok) caches.open(CACHE_NAME).then(cache => cache.put(event.request, networkResp.clone()));
-          return networkResp;
-        }).catch(() => resp || new Response('Offline', {status:503}));
-      })
-    );
-    return;
-  }
-
-  // 3️⃣ Default: network first, fallback to cache
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    caches.match(req).then(cachedResp => {
+      if(cachedResp) return cachedResp;
+
+      return fetch(req).then(networkResp => {
+        if(!networkResp || !networkResp.ok) return networkResp;
+
+        // Cache network response for future
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(req, networkResp.clone());
+          return networkResp;
+        });
+      }).catch(err => {
+        console.warn('[SW] Fetch failed, returning fallback', req.url);
+        if(req.url.endsWith('movies.json')){
+          // return empty JSON as fallback
+          return new Response(JSON.stringify({movies:[], shows:[]}), {
+            headers: {'Content-Type':'application/json'}
+          });
+        }
+        return new Response('Offline', {status:503, statusText:'Offline'});
+      });
+    })
   );
 });
