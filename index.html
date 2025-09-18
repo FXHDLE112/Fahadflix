@@ -279,24 +279,66 @@ document.getElementById('switchProfileBtn').addEventListener('click', ()=> showP
 document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
 
 // LOAD MEDIA
-async function loadMediaData(){
-  try{
-    // Fetch directly from the tes-html GitHub raw file
-    const response = await fetch('https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json', {
-      headers: {
-        'Cache-Control': 'no-cache'
-      }
-    });
-    mediaData = await response.json();
-    if(!mediaData.movies) mediaData.movies=[]; 
-    if(!mediaData.shows) mediaData.shows=[];
-  } catch(e){ 
-    console.error('Failed to load media data:',e); 
-    mediaData={movies:[], shows:[]}; 
+async function loadMovies() {
+  // 1. Check if cached locally
+  const cached = localStorage.getItem("moviesData");
+  if (cached) {
+    console.log("Loaded movies.json from local cache");
+    try {
+      return JSON.parse(cached);
+    } catch {
+      console.warn("Corrupt cache, ignoring...");
+    }
   }
+
+  // 2. Try Netlify
+  try {
+    const resp = await fetch("movies.json");
+    if (resp.ok) {
+      const data = await resp.json();
+      localStorage.setItem("moviesData", JSON.stringify(data)); // save for offline
+      console.log("Loaded movies.json from Netlify");
+      return data;
+    }
+    throw new Error("Netlify movies.json not found");
+  } catch (err) {
+    console.warn("Netlify fetch failed:", err.message);
+  }
+
+  // 3. Fallback GitHub raw
+  try {
+    const resp = await fetch("https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json");
+    if (resp.ok) {
+      const data = await resp.json();
+      localStorage.setItem("moviesData", JSON.stringify(data)); // save for offline
+      console.log("Loaded movies.json from GitHub Raw");
+      return data;
+    }
+    throw new Error("GitHub raw movies.json not found");
+  } catch (err) {
+    console.error("GitHub fetch failed:", err.message);
+  }
+
+  // 4. If all fail
+  throw new Error("Could not load movies.json from any source");
 }
 
+// Usage
+loadMovies()
+  .then(data => {
+    Object.keys(data).forEach(key => {
+      console.log("Movie category:", key, data[key]);
+      // Render your movies...
+    });
+  })
+  .catch(error => {
+    console.error(error);
+  });
 
+
+
+
+  
 // HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
 document.getElementById('searchInput').addEventListener('input', ()=> renderHome(document.getElementById('searchInput').value.trim()));
