@@ -280,11 +280,11 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 
 // LOAD MEDIA
 async function loadMovies() {
-  // 1. Check if cached locally
+  // 1. Check local cache first
   const cached = localStorage.getItem("moviesData");
   if (cached) {
-    console.log("Loaded movies.json from local cache");
     try {
+      console.log("Loaded movies.json from local cache");
       return JSON.parse(cached);
     } catch {
       console.warn("Corrupt cache, ignoring...");
@@ -293,7 +293,7 @@ async function loadMovies() {
 
   // 2. Try Netlify
   try {
-    const resp = await fetch("movies.json");
+    const resp = await fetch("https://fahadflix.netlify.app/movies.json");
     if (resp.ok) {
       const data = await resp.json();
       localStorage.setItem("moviesData", JSON.stringify(data)); // save for offline
@@ -305,12 +305,12 @@ async function loadMovies() {
     console.warn("Netlify fetch failed:", err.message);
   }
 
-  // 3. Fallback GitHub raw
+  // 3. Fallback GitHub Raw
   try {
     const resp = await fetch("https://raw.githubusercontent.com/FXHDLE112/tes-html/main/movies.json");
     if (resp.ok) {
       const data = await resp.json();
-      localStorage.setItem("moviesData", JSON.stringify(data)); // save for offline
+      localStorage.setItem("moviesData", JSON.stringify(data));
       console.log("Loaded movies.json from GitHub Raw");
       return data;
     }
@@ -322,7 +322,7 @@ async function loadMovies() {
   // 4. If all fail
   throw new Error("Could not load movies.json from any source");
 }
-
+  
 // Usage
 loadMovies()
   .then(data => {
