@@ -283,7 +283,7 @@ document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(cur
 async function loadMovies() {
   const NETLIFY_URL = "https://fahadflix.netlify.app/movies.json";
 
-  // 1️⃣ Check local cache first
+  // 1️⃣ Try loading from localStorage first
   const cached = localStorage.getItem("moviesData");
   if (cached) {
     try {
@@ -297,25 +297,25 @@ async function loadMovies() {
   // 2️⃣ Fetch from Netlify
   try {
     const resp = await fetch(NETLIFY_URL);
-    if (!resp.ok) throw new Error("Failed to fetch movies.json from Netlify");
+    if (!resp.ok) throw new Error("Failed to fetch from Netlify");
     const data = await resp.json();
-
-    // Save to localStorage for offline usage
-    localStorage.setItem("moviesData", JSON.stringify(data));
+    localStorage.setItem("moviesData", JSON.stringify(data)); // save for offline
     console.log("Loaded movies.json from Netlify");
     return data;
   } catch (err) {
-    console.error("Fetch movies.json failed:", err.message);
-    // Fallback to empty object
-    return { movies: [], shows: [] };
+    console.error("Fetching movies.json failed:", err.message);
+    throw new Error("Could not load movies.json from Netlify");
   }
 }
 
-// USAGE
-loadMovies().then(data => {
-  mediaData = data;      // store globally
-  renderHome();           // render UI
-});
+// Usage
+loadMovies()
+  .then(data => {
+    mediaData.movies = data.movies || [];
+    mediaData.shows = data.shows || [];
+    renderHome();
+  })
+  .catch(err => console.error(err));
 
 // HOME PAGE with Resume Watching
 const moviesContainer=document.getElementById('moviesContainer');
