@@ -168,7 +168,7 @@ video{width:95%;max-width:980px;border-radius:8px;background:#000}
 </div>
 
 <script>
-// FIREBASE CONFIG (unchanged)
+// FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
   authDomain: "fahadflix-storage.firebaseapp.com",
@@ -179,27 +179,30 @@ const firebaseConfig = {
   appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database();
+const auth = firebase.auth(), db = firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
 let currentPartyId=null;
 
-// SERVICE WORKER registration (sw.js must be at site root)
+// SERVICE WORKER registration
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').then(reg=>{
     console.log('Service Worker registered', reg.scope);
-  }).catch(err=>{
-    console.warn('SW registration failed:', err);
-  });
+  }).catch(err=>console.warn('SW registration failed:', err));
 }
-
-// Cache name used by the page (ensure it matches sw.js)
 const VIDEO_CACHE = 'videos-v1';
 
 // PAGES
-const pages={ auth: document.getElementById('authPage'), profiles: document.getElementById('profilesPage'), home: document.getElementById('homePage'), episodes: document.getElementById('episodesPage'), player: document.getElementById('playerPage'), admin: document.getElementById('adminPage') };
+const pages={
+  auth: document.getElementById('authPage'),
+  profiles: document.getElementById('profilesPage'),
+  home: document.getElementById('homePage'),
+  episodes: document.getElementById('episodesPage'),
+  player: document.getElementById('playerPage'),
+  admin: document.getElementById('adminPage')
+};
 function showPage(name){ Object.values(pages).forEach(el=>el.classList.remove('active')); pages[name].classList.add('active'); }
 
-// AUTH (unchanged logic)
+// AUTH LOGIC
 document.getElementById('signInBtn').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value.trim();
   const pwd=document.getElementById('password').value.trim();
@@ -207,12 +210,13 @@ document.getElementById('signInBtn').addEventListener('click', async ()=>{
   try{
     const userCred=await auth.signInWithEmailAndPassword(email,pwd);
     currentUser=userCred.user;
-    await loadProfiles(); 
+    await loadProfiles();
     await loadMediaData();
     showPage('profiles'); renderProfiles();
     checkURLParty();
   } catch(e){ alert("Login failed: "+e.message); }
 });
+
 document.getElementById('signUpBtn').addEventListener('click', async ()=>{
   const email=document.getElementById('email').value.trim();
   const pwd=document.getElementById('password').value.trim();
@@ -229,13 +233,13 @@ document.getElementById('signUpBtn').addEventListener('click', async ()=>{
 
 // LOAD / SAVE PROFILES
 async function loadProfiles(){
-  const snapshot=await db.ref('profiles/'+currentUser.uid).once('value');
-  if(snapshot.exists()) profiles=snapshot.val();
+  const snapshot = await db.ref('profiles/'+currentUser.uid).once('value');
+  if(snapshot.exists()) profiles = snapshot.val();
   else { profiles=[{name:"User 1",img:"https://via.placeholder.com/150"}]; await db.ref('profiles/'+currentUser.uid).set(profiles);}
 }
 async function saveProfiles(){ if(currentUser) await db.ref('profiles/'+currentUser.uid).set(profiles); }
 
-// PROFILES
+// PROFILES RENDER
 const profilesContainer=document.getElementById('profilesContainer');
 document.getElementById('addProfileBtn').addEventListener('click', async ()=>{
   const name=document.getElementById('newProfileName').value.trim();
@@ -272,12 +276,11 @@ function renderProfiles(){
   });
 }
 
-// SIGN OUT / SWITCH
+// SIGN OUT / SWITCH PROFILE
 document.getElementById('signOutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{ await auth.signOut(); currentUser=null; showPage('auth'); });
 document.getElementById('switchProfileBtn').addEventListener('click', ()=> showPage('profiles'));
-document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied: Admins only'); } });
-
+document.getElementById('adminToggleBtn').addEventListener('click', ()=>{ if(currentUser?.email==='fxhdle2@gmail.com'){ showPage('admin'); } else { alert('Access denied'); } });
 
 // ✅ LOAD MEDIA (CORS SAFE)
 async function loadMediaData(){
