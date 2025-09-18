@@ -1,194 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>FahadFlix</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; background:#111; color:#eee; }
-    header { background:#222; padding:10px; text-align:center; }
-    h1 { margin:0; }
-    .page { display:none; padding:20px; }
-    .active { display:block; }
-    .profile-card { display:inline-block; margin:10px; padding:10px; background:#333; border-radius:8px; cursor:pointer; }
-    .profile-card img { width:100px; height:100px; border-radius:50%; display:block; margin:0 auto; }
-    .profile-card p { text-align:center; margin:10px 0 0; }
-    .movie-card { display:inline-block; margin:10px; background:#222; border-radius:8px; overflow:hidden; cursor:pointer; width:150px; }
-    .movie-card img { width:100%; }
-    .title { padding:5px; text-align:center; }
-    video { width:90%; max-width:800px; display:block; margin:20px auto; background:#000; }
-  </style>
+<meta charset="UTF-8">
+<title>FahadFlix</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+/* keep all your styles, I only adjusted profiles */
+...
+/* ===== MERGED PROFILES INSIDE HOME ===== */
+#profilesInline {margin:16px 0;display:flex;flex-wrap:wrap;gap:16px;justify-content:center;}
+.profile-card{width:120px;text-align:center;background:#1b1b1b;padding:10px;border-radius:10px;cursor:pointer;transition:0.25s;}
+.profile-card:hover{transform:scale(1.05);}
+.profile-card img{width:100px;height:100px;border-radius:50%;object-fit:cover;}
+.profile-card p{margin:6px 0;font-weight:600;font-size:14px;}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-database-compat.js"></script>
 </head>
 <body>
-  <header>
-    <h1>🎬 FahadFlix</h1>
-  </header>
+<div class="container">
 
-  <!-- Auth Page -->
-  <section id="auth" class="page active">
-    <h2>Sign In / Sign Up</h2>
-    <input id="email" type="email" placeholder="Email"><br>
-    <input id="password" type="password" placeholder="Password"><br>
-    <button id="signInBtn">Sign In</button>
-    <button id="signUpBtn">Sign Up</button>
-  </section>
+<!-- AUTH PAGE -->
+<div id="authPage" class="page active">
+  <div class="auth-box">
+    <h2>Login or Sign Up</h2>
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="signInBtn" class="btn">Sign In</button>
+    <button id="signUpBtn" class="btn ghost">Sign Up</button>
+  </div>
+</div>
 
-  <!-- Profiles Page -->
-  <section id="profiles" class="page">
-    <h2>Select a Profile</h2>
-    <div id="profilesContainer"></div>
-    <h3>Add Profile</h3>
-    <input id="newProfileName" placeholder="Name"><br>
-    <input id="newProfileImage" type="file" accept="image/*"><br>
+<!-- HOME PAGE (with profiles merged) -->
+<div id="homePage" class="page">
+  <div class="header">
+    <h1 id="welcomeTitle">Browse</h1>
+    <div class="btn-group">
+      <button id="logoutBtn" class="btn">Logout</button>
+      <button id="adminToggleBtn" class="btn ghost" style="display:none">Admin Panel</button>
+    </div>
+  </div>
+
+  <!-- INLINE PROFILE SELECTION -->
+  <h2>Who's watching?</h2>
+  <div id="profilesInline"></div>
+  <div class="add-area">
+    <input id="newProfileName" type="text" placeholder="New profile name">
+    <input id="newProfileImage" type="file" accept="image/*">
     <button id="addProfileBtn">Add</button>
-  </section>
+  </div>
 
-  <!-- Home Page -->
-  <section id="home" class="page">
-    <h2 id="welcomeTitle">Welcome!</h2>
-    <button id="switchProfileBtn">Switch Profile</button>
-    <button id="logoutBtn">Logout</button>
-    <div id="moviesContainer"></div>
-  </section>
+  <input id="searchInput" type="text" placeholder="Search movies or shows...">
+  <div id="moviesContainer"></div>
+</div>
 
-  <!-- Player -->
-  <section id="player" class="page">
-    <button id="playerBackBtn">⬅ Back</button>
-    <h2 id="playerTitle"></h2>
-    <video id="videoPlayer" controls></video>
-  </section>
+<!-- PLAYER PAGE -->
+<div id="playerPage" class="page">
+  <h1 id="playerTitle">Player</h1>
+  <div id="player"><video id="videoPlayer" controls crossorigin="anonymous"></video></div>
+  <div class="controls">
+    <button class="btn ghost" id="playerBackBtn">Back</button>
+  </div>
+</div>
 
-  <script>
-    // ===== FAKE Firebase Mock (replace with real SDK later) =====
-    const auth = {
-      onAuthStateChanged(cb) {
-        const user = JSON.parse(localStorage.getItem("fakeUser") || "null");
-        setTimeout(()=>cb(user), 500);
-      },
-      signInWithEmailAndPassword(email,pw){ localStorage.setItem("fakeUser", JSON.stringify({uid:"123",email})); location.reload(); },
-      createUserWithEmailAndPassword(email,pw){ localStorage.setItem("fakeUser", JSON.stringify({uid:"123",email})); location.reload(); },
-      signOut(){ localStorage.removeItem("fakeUser"); location.reload(); }
-    };
-    const db = {
-      ref(path){ return { set(v){ localStorage.setItem(path, JSON.stringify(v)); },
-                          once(){ return Promise.resolve({ val:()=>JSON.parse(localStorage.getItem(path) || "null") }); } }; }
-    };
+</div>
 
-    let currentUser=null;
-    let profiles=[];
-    let mediaData={movies:[],shows:[]};
+<script>
+// ===== FIREBASE =====
+const firebaseConfig = {
+  apiKey:"AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+  authDomain:"fahadflix-storage.firebaseapp.com",
+  databaseURL:"https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"fahadflix-storage",
+  storageBucket:"fahadflix-storage.appspot.com",
+  messagingSenderId:"1064833913945",
+  appId:"1:1064833913945:web:bf711e8b364fcfdf2b8d48"
+};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(), db=firebase.database();
 
-    const pages={auth:document.getElementById('auth'),profiles:document.getElementById('profiles'),home:document.getElementById('home'),player:document.getElementById('player')};
-    function showPage(name){Object.values(pages).forEach(p=>p.classList.remove('active'));pages[name].classList.add('active');}
+let currentUser=null, profiles=[], mediaData={movies:[],shows:[]}, activeProfile=null;
 
-    // ===== AUTH =====
-    document.getElementById('signInBtn').onclick=()=>auth.signInWithEmailAndPassword(document.getElementById('email').value,document.getElementById('password').value);
-    document.getElementById('signUpBtn').onclick=()=>auth.createUserWithEmailAndPassword(document.getElementById('email').value,document.getElementById('password').value);
-    document.getElementById('logoutBtn').onclick=()=>auth.signOut();
+const pages={auth:document.getElementById('authPage'),home:document.getElementById('homePage'),player:document.getElementById('playerPage')};
+function showPage(n){Object.values(pages).forEach(p=>p.classList.remove('active'));pages[n].classList.add('active');}
 
-    auth.onAuthStateChanged(user=>{
-      if(user){currentUser=user;loadProfiles();}
-      else{showPage('auth');}
-    });
+// ===== AUTH =====
+document.getElementById('signInBtn').onclick=()=>auth.signInWithEmailAndPassword(email.value,password.value).catch(console.error);
+document.getElementById('signUpBtn').onclick=()=>auth.createUserWithEmailAndPassword(email.value,password.value).catch(console.error);
+document.getElementById('logoutBtn').onclick=()=>auth.signOut();
 
-    // ===== PROFILES =====
-    function loadProfiles(){
-      db.ref('profiles/'+currentUser.uid).once('value').then(snap=>{
-        profiles = snap.val() ? Object.values(snap.val()) : [];
-        renderProfiles();
+auth.onAuthStateChanged(user=>{
+  if(user){currentUser=user;loadProfiles();}
+  else{showPage('auth');}
+});
 
-        // Auto-load last profile if saved
-        const last = localStorage.getItem("lastProfile");
-        if(last){
-          const p = JSON.parse(last);
-          document.getElementById('welcomeTitle').textContent = `Welcome, ${p.name}`;
-          showPage('home');
-          renderMedia();
-        } else {
-          showPage('profiles');
-        }
-      });
-    }
-
-    function renderProfiles(){
-      const container=document.getElementById('profilesContainer');
-      container.innerHTML='';
-      profiles.forEach((p,i)=>{
-        const card=document.createElement('div');card.className='profile-card';
-        card.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>`;
-
-        // Select profile → go to Home
-        card.onclick=()=>{
-          localStorage.setItem("lastProfile", JSON.stringify(p)); // remember
-          document.getElementById('welcomeTitle').textContent = `Welcome, ${p.name}`;
-          showPage('home');
-          renderMedia();
-        };
-
-        const delBtn=document.createElement('button');
-        delBtn.textContent='Delete';
-        delBtn.onclick=(e)=>{
-          e.stopPropagation();
-          profiles.splice(i,1);
-          saveProfiles();
-          renderProfiles();
-        };
-        card.appendChild(delBtn);
-        container.appendChild(card);
-      });
-    }
-
-    document.getElementById('addProfileBtn').onclick=()=>{
-      const name=document.getElementById('newProfileName').value;
-      const file=document.getElementById('newProfileImage').files[0];
-      if(!name||!file)return alert('Fill all fields');
-      const reader=new FileReader();
-      reader.onload=()=>{
-        profiles.push({name,img:reader.result});
-        saveProfiles();renderProfiles();
-      };
-      reader.readAsDataURL(file);
-    };
-
-    function saveProfiles(){ db.ref('profiles/'+currentUser.uid).set(profiles); }
-    document.getElementById('switchProfileBtn').onclick=()=>showPage('profiles');
-
-    // ===== FETCH MEDIA FROM NETLIFY =====
-    async function loadMedia(){
-      try{
-        const res=await fetch('https://fahadflix.netlify.app/movies.json');
-        if(!res.ok)throw new Error('Failed to fetch');
-        const data=await res.json();
-        mediaData=data;
-        renderMedia();
-      }catch(e){console.error('Could not load media',e);}
-    }
-
-    // ===== RENDER MOVIES =====
-    function renderMedia(){
-      const container=document.getElementById('moviesContainer');container.innerHTML='';
-      ['movies','shows'].forEach(cat=>{
-        if(mediaData[cat].length){
-          const section=document.createElement('div');
-          section.innerHTML=`<h2>${cat.charAt(0).toUpperCase()+cat.slice(1)}</h2>`;
-          mediaData[cat].forEach(m=>{
-            const card=document.createElement('div');card.className='movie-card';
-            card.innerHTML=`<img src="${m.img}" alt="${m.title}"><div class="title">${m.title}</div>`;
-            card.onclick=()=>openPlayer(m);
-            section.appendChild(card);
-          });
-          container.appendChild(section);
-        }
-      });
-    }
-
-    // ===== PLAYER =====
-    const videoPlayer=document.getElementById('videoPlayer');
-    function openPlayer(media){showPage('player');videoPlayer.src=media.src;document.getElementById('playerTitle').textContent=media.title;}
-    document.getElementById('playerBackBtn').onclick=()=>showPage('home');
-
-    // Load media data immediately
+// ===== PROFILES (INLINE) =====
+function loadProfiles(){
+  db.ref('profiles/'+currentUser.uid).once('value').then(snap=>{
+    profiles=snap.val()?Object.values(snap.val()):[];
+    renderProfiles();
+    showPage('home');
     loadMedia();
-  </script>
+  });
+}
+
+function renderProfiles(){
+  const container=document.getElementById('profilesInline');
+  container.innerHTML='';
+  profiles.forEach((p,i)=>{
+    const card=document.createElement('div');card.className='profile-card';
+    card.innerHTML=`<img src="${p.img}" alt=""><p>${p.name}</p>`;
+    card.onclick=()=>{
+      activeProfile=p;
+      welcomeTitle.textContent="Welcome, "+p.name;
+    };
+    container.appendChild(card);
+  });
+}
+document.getElementById('addProfileBtn').onclick=()=>{
+  const name=newProfileName.value,file=newProfileImage.files[0];
+  if(!name||!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{profiles.push({name,img:reader.result});saveProfiles();renderProfiles();}
+  reader.readAsDataURL(file);
+};
+function saveProfiles(){db.ref('profiles/'+currentUser.uid).set(profiles);}
+
+// ===== MEDIA =====
+async function loadMedia(){
+  try{
+    const res=await fetch('https://fahadflix.netlify.app/movies.json');
+    if(!res.ok)throw new Error('fetch failed');
+    mediaData=await res.json();
+    renderMedia();
+  }catch(e){console.error(e);}
+}
+function renderMedia(){
+  const container=moviesContainer;container.innerHTML='';
+  ['movies','shows'].forEach(cat=>{
+    if(mediaData[cat].length){
+      const sec=document.createElement('div');
+      sec.innerHTML=`<h2 class="section-title">${cat}</h2>`;
+      const row=document.createElement('div');row.className='row';
+      mediaData[cat].forEach(m=>{
+        const card=document.createElement('div');card.className='movie-card';
+        card.innerHTML=`<img src="${m.img}"><div class="title">${m.title}</div>`;
+        card.onclick=()=>openPlayer(m);
+        row.appendChild(card);
+      });
+      sec.appendChild(row);container.appendChild(sec);
+    }
+  });
+}
+
+// ===== PLAYER =====
+function openPlayer(m){showPage('player');videoPlayer.src=m.src;playerTitle.textContent=m.title;}
+playerBackBtn.onclick=()=>showPage('home');
+</script>
 </body>
 </html>
