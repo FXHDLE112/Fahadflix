@@ -128,6 +128,9 @@ video{width:95%;max-width:960px;border-radius:12px;background:#000;outline:none;
   </div>
 </div>
 
+  let currentProfile = null; // add this at the top
+
+
 <!-- HOME PAGE -->
 <div id="homePage" class="page">
   <div class="header">
@@ -273,16 +276,33 @@ function loadProfiles(){
 }
 
 function renderProfiles(){
-  const container=document.getElementById('profilesContainer');
-  container.innerHTML='';
+  const container = document.getElementById('profilesContainer');
+  container.innerHTML = '';
   profiles.forEach((p,i)=>{
-    const card=document.createElement('div');card.className='profile-card';
-    card.innerHTML=`<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>`;
-    const delBtn=document.createElement('button');delBtn.textContent='Delete';delBtn.onclick=()=>{profiles.splice(i,1);saveProfiles();renderProfiles();}
-    card.appendChild(delBtn);container.appendChild(card);
+    const card = document.createElement('div');
+    card.className = 'profile-card';
+    card.innerHTML = `<img src="${p.img}" alt="${p.name}"><p>${p.name}</p>`;
+
+    // **CLICK TO SELECT PROFILE**
+    card.onclick = () => {
+      currentProfile = p;
+      document.getElementById('welcomeTitle').textContent = `Welcome, ${p.name}`;
+      showPage('home');
+    };
+
+    const delBtn = document.createElement('button');
+    delBtn.textContent = 'Delete';
+    delBtn.onclick = (e) => {
+      e.stopPropagation(); // prevent card click
+      profiles.splice(i,1);
+      saveProfiles();
+      renderProfiles();
+    }
+
+    card.appendChild(delBtn);
+    container.appendChild(card);
   });
 }
-
 document.getElementById('addProfileBtn').onclick=()=>{
   const name=document.getElementById('newProfileName').value;
   const file=document.getElementById('newProfileImage').files[0];
