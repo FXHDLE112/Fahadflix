@@ -168,7 +168,14 @@ video{width:95%;max-width:960px;border-radius:12px;background:#000;outline:none;
 
 <script>
 // ===== FIREBASE =====
-const firebaseConfig = { /* your config here */ };
+const firebaseConfig = {  apiKey: "AIzaSyCvd_IgPL3_gYjhfplngBboHWjSLRIhhIE",
+  authDomain: "fahadflix-storage.firebaseapp.com",
+  databaseURL: "https://fahadflix-storage-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "fahadflix-storage",
+  storageBucket: "fahadflix-storage.firebasestorage.app",
+  messagingSenderId: "1064833913945",
+  appId: "1:1064833913945:web:bf711e8b364fcfdf2b8d48",
+  measurementId: "G-5F797ZW9PV" };
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth(), db=firebase.database();
 let currentUser=null, profiles=[], mediaData={movies:[], shows:[]};
