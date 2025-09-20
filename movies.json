@@ -9,7 +9,7 @@
         {
           "season": 1,
           "episodes": [
-            { "title": "Episode 1 The Legendary Beach", "src": "http://fahadflixdirectlink.netlify.app/The%20Legendary%20Beach.mp4", "subtitles": "https://github.com/FXHDLE112/Fahadflix/releases/download/sub/The.Legendary.Beach.vtt" },
+            { "title": "Episode 1 The Legendary Beach", "src": "https://fahadflixdirectlink.netlify.app/the-legendary-beach.mp4", "subtitles": "https://github.com/FXHDLE112/Fahadflix/releases/download/sub/The.Legendary.Beach.vtt" },
             { "title": "Episode 2 Campsite Chaos", "src": "http://github.com/FXHDLE112/tes-html/releases/download/moviees/camsite.chaos.4.mp4", "subtitles": null },
             { "title": "Episode 3 Prison Outbreak", "src": "http://github.com/FXHDLE112/tes-html/releases/download/moviees/prison.outbreak.compressed.mp4", "subtitles": null },
             { "title": "Episode 4 The Sleepover", "src": "http://github.com/FXHDLE112/tes-html/releases/download/moviees/sleepover.mp4", "subtitles": null }
